@@ -57,4 +57,7 @@ C4Container
 
 ---
 **Note:** This project is part of a professional portfolio focusing on **Financial Engineering** and **System Architecture**.
+---
+*Status: Initial Domain Model implementation in progress.*
+
 ```
