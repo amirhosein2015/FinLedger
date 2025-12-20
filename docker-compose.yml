@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # 1. Database (The Ledger Vault)
+  db:
+    image: postgres:16  # 
+    container_name: finledger_db
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: SecurePassword123!
+      POSTGRES_DB: finledger_core
+    ports:
+      - "5435:5432" # 
+    volumes:
+      - ./deploy/data/postgres:/var/lib/postgresql/data # 
+
+  # 2. Caching & Locks (Performance)
+  redis:
+    image: redis:alpine
+    container_name: finledger_redis
+    restart: always
+    ports:
+      - "6380:6379" # پورت متفاوت
+    volumes:
+      - ./deploy/data/redis:/data
+
+  # 3. Message Broker (Async Communication)
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: finledger_bus
+    restart: always
+    ports:
+      - "15673:15672" # داشبورد مدیریت (Management UI)
+      - "5673:5672"   # پورت اصلی
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
