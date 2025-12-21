@@ -1,13 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\FinLedger.Modules.Ledger.Application\FinLedger.Modules.Ledger.Application.csproj" />
-  </ItemGroup>
-
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BuildingBlocks\FinLedger.BuildingBlocks.Domain\FinLedger.BuildingBlocks.Domain.csproj" />
+    <ProjectReference Include="..\FinLedger.Modules.Ledger.Application\FinLedger.Modules.Ledger.Application.csproj" />
+    <ProjectReference Include="..\FinLedger.Modules.Ledger.Domain\FinLedger.Modules.Ledger.Domain.csproj" />
+  </ItemGroup>
 
 </Project>

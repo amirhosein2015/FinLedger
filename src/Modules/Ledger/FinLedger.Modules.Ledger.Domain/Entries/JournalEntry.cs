@@ -5,7 +5,7 @@ namespace FinLedger.Modules.Ledger.Domain.Entries;
 public class JournalEntry : AggregateRoot
 {
     public DateTime TransactionDate { get; private set; }
-    public string Description { get; private set; }
+    public string Description { get; private set; } = default!;
     public List<JournalEntryLine> Lines { get; private set; } = new();
     public bool IsPosted { get; private set; }
 
