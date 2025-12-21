@@ -28,4 +28,16 @@ public class LedgerDbContext : DbContext
 
         base.OnModelCreating(modelBuilder);
     }
+public void EnsureSchemaCreated()
+{
+    var tenantId = _tenantProvider.GetTenantId();
+    if (string.IsNullOrEmpty(tenantId) || tenantId == "public") return;
+
+    // ایجاد اسکما در صورتی که وجود نداشته باشد
+    Database.ExecuteSqlRaw($"CREATE SCHEMA IF NOT EXISTS {tenantId};");
+   
+}
+
+
+
 }

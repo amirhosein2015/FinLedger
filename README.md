@@ -31,7 +31,7 @@ C4Container
     Rel(mod_ledger, bus, "Publishes Domain Events")
 ```
 
-## 🚀 Key Features (Principal Level)
+## 🚀 Key Features
 - **Multi-Tenancy:** Advanced **Schema-per-tenant** isolation strategy for enterprise-grade data privacy and compliance.
 - **Double-Entry Integrity:** Strict `Debit == Credit` invariant enforced within the Domain Aggregate roots.
 - **Audit-Ready:** Immutable ledger design ensures a reliable audit trail for all financial movements.
