@@ -1,9 +1,11 @@
 using FinLedger.BuildingBlocks.Domain;
+using FinLedger.BuildingBlocks.Application; //ValidationBehavior
 using FinLedger.Modules.Ledger.Api.Infrastructure;
 using FinLedger.Modules.Ledger.Infrastructure.Persistence;
-using FinLedger.Modules.Ledger.Application.Abstractions; // اضافه شد
+using FinLedger.Modules.Ledger.Application.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using FluentValidation; 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,22 +20,29 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<LedgerDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ۴. معرفی DbContext به لایه Application (بسیار مهم برای CQRS)
+// ۴. معرفی DbContext به لایه Application
 builder.Services.AddScoped<ILedgerDbContext>(provider => provider.GetRequiredService<LedgerDbContext>());
 
-// ۵. ثبت MediatR (به سیستم می‌گوید تمام Handlerها را در پروژه Application پیدا کند)
+// ۵. ثبت MediatR و Pipeline Behaviors (الگوی حرفه‌ای CQRS)
 builder.Services.AddMediatR(cfg => 
 {
+    // پیدا کردن تمام Handlerها در لایه Application
     cfg.RegisterServicesFromAssembly(typeof(ILedgerDbContext).Assembly);
+    
+    // Principal Signal: اضافه کردن رفتار اعتبار‌سنجی خودکار قبل از اجرای هر Command
+    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
 });
 
-// ۶. ثبت TenantProvider
+// ۶. ثبت تمام Validatorهای FluentValidation در لایه Application
+builder.Services.AddValidatorsFromAssembly(typeof(ILedgerDbContext).Assembly);
+
+// ۷. ثبت TenantProvider و HttpContext
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantProvider, HttpHeaderTenantProvider>();
 
 var app = builder.Build();
 
-// ۷. فعال‌سازی Swagger در محیط توسعه
+// ۸. فعال‌سازی Swagger در محیط توسعه
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

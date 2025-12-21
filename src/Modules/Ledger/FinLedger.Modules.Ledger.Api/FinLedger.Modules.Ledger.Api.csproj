@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FinLedger.Modules.Ledger.Application\FinLedger.Modules.Ledger.Application.csproj" />
     <ProjectReference Include="..\FinLedger.Modules.Ledger.Infrastructure\FinLedger.Modules.Ledger.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\FinLedger.BuildingBlocks.Application\FinLedger.BuildingBlocks.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
