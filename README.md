@@ -44,18 +44,21 @@ C4Container
     - [x] Multi-tenancy Core (Schema-per-tenant via EF Core).
     - [x] Domain Modeling (Account, JournalEntry).
     - [x] Initial API Integration & PostgreSQL Deployment.
-- [ ] **Phase 2: Application Patterns (CQRS)**
-    - [ ] Implementation of **MediatR** for Command/Query separation.
-    - [ ] FluentValidation for complex business rules.
+- [x] **Phase 2: Application Patterns & API Excellence**
+    - [x] Implementation of **MediatR** for Command/Query separation (CQRS).
+    - [x] **FluentValidation** for automatic request validation.
+    - [x] **Global Exception Handling** (standardized ProblemDetails).
+    - [x] **API Versioning** (v1.0) for enterprise lifecycle management.
     - [ ] Dynamic Schema creation for new Tenant onboarding.
 - [ ] **Phase 3: Resilience & Consistency**
     - [ ] **Outbox Pattern** for guaranteed event delivery.
     - [ ] **Redis** Distributed Locking for financial concurrency safety.
     - [ ] OpenTelemetry for distributed tracing & observability.
 - [ ] **Phase 4: Financial Excellence & Reporting**
-    - [ ] Fiscal Year closing logic & Period locking.
-    - [ ] High-performance reporting using optimized SQL/Dapper.
+    - [ ] Immutable Ledger posting logic.
+    - [ ] Fiscal Year closing & Period locking.
     - [ ] Automated PDF statement generation via background workers.
+
 
 ## 🛠️ Tech Stack
 - **Core:** .NET 9.0 (LTS Ready), C# 13
