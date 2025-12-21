@@ -2,10 +2,11 @@ using FinLedger.BuildingBlocks.Domain;
 using FinLedger.Modules.Ledger.Domain.Accounts;
 using FinLedger.Modules.Ledger.Domain.Entries;
 using Microsoft.EntityFrameworkCore;
+using FinLedger.Modules.Ledger.Application.Abstractions;
 
 namespace FinLedger.Modules.Ledger.Infrastructure.Persistence;
 
-public class LedgerDbContext : DbContext
+public class LedgerDbContext : DbContext, ILedgerDbContext 
 {
     private readonly ITenantProvider _tenantProvider;
 
@@ -28,15 +29,17 @@ public class LedgerDbContext : DbContext
 
         base.OnModelCreating(modelBuilder);
     }
+
+
 public void EnsureSchemaCreated()
 {
     var tenantId = _tenantProvider.GetTenantId();
     if (string.IsNullOrEmpty(tenantId) || tenantId == "public") return;
 
-    // ایجاد اسکما در صورتی که وجود نداشته باشد
-    Database.ExecuteSqlRaw($"CREATE SCHEMA IF NOT EXISTS {tenantId};");
    
+    Database.ExecuteSqlInterpolated($"CREATE SCHEMA IF NOT EXISTS {tenantId.ToLower().Trim()};");
 }
+
 
 
 

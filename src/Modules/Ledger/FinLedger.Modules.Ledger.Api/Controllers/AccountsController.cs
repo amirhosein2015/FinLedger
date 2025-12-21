@@ -1,8 +1,6 @@
-using FinLedger.Modules.Ledger.Api.Requests;
-using FinLedger.Modules.Ledger.Domain.Accounts;
-using FinLedger.Modules.Ledger.Infrastructure.Persistence;
+using FinLedger.Modules.Ledger.Application.Accounts.CreateAccount;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace FinLedger.Modules.Ledger.Api.Controllers;
 
@@ -10,31 +8,19 @@ namespace FinLedger.Modules.Ledger.Api.Controllers;
 [Route("api/ledger/[controller]")]
 public class AccountsController : ControllerBase
 {
-    private readonly LedgerDbContext _dbContext;
+    private readonly IMediator _mediator;
 
-    public AccountsController(LedgerDbContext dbContext)
+    public AccountsController(IMediator mediator)
     {
-        _dbContext = dbContext;
+        _mediator = mediator;
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateAccountRequest request)
+    public async Task<IActionResult> Create(CreateAccountCommand command)
     {
-        // ۱. ساخت موجودیت بر اساس قوانین دامین
-        var account = Account.Create(request.Code, request.Name, request.Type);
-
-        // ۲. اضافه کردن به دیتابیس
-        // نکته حرفه‌ای: اینجا EF Core به صورت خودکار از Schema-per-Tenant استفاده می‌کند
-        _dbContext.Accounts.Add(account);
-        await _dbContext.SaveChangesAsync();
-
-        return Ok(new { account.Id, account.Code, account.Name });
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> GetAll()
-    {
-        var accounts = await _dbContext.Accounts.ToListAsync();
-        return Ok(accounts);
+        //  کنترلر فقط پیام را به MediatR می‌دهد
+        var accountId = await _mediator.Send(command);
+        
+        return Ok(new { Id = accountId });
     }
 }
