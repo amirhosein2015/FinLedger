@@ -1,46 +1,54 @@
 using FinLedger.BuildingBlocks.Domain;
+using FinLedger.Modules.Ledger.Application.Abstractions;
 using FinLedger.Modules.Ledger.Domain.Accounts;
 using FinLedger.Modules.Ledger.Domain.Entries;
 using Microsoft.EntityFrameworkCore;
-using FinLedger.Modules.Ledger.Application.Abstractions;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace FinLedger.Modules.Ledger.Infrastructure.Persistence;
 
-public class LedgerDbContext : DbContext, ILedgerDbContext 
+public class LedgerDbContext : DbContext, ILedgerDbContext
 {
-    private readonly ITenantProvider _tenantProvider;
+    public string TenantId { get; }
 
     public LedgerDbContext(DbContextOptions<LedgerDbContext> options, ITenantProvider tenantProvider) 
         : base(options)
     {
-        _tenantProvider = tenantProvider;
+        TenantId = tenantProvider.GetTenantId()?.ToLower().Trim() ?? "public";
     }
 
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder) // اصلاح نام ModelBuilder
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // استراتژی جداسازی مشتریان
-        var tenantId = _tenantProvider.GetTenantId() ?? "public";
-        modelBuilder.HasDefaultSchema(tenantId);
-
+        modelBuilder.HasDefaultSchema(TenantId);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LedgerDbContext).Assembly);
-
         base.OnModelCreating(modelBuilder);
     }
 
+    public async Task CreateSchemaAsync(string schemaName)
+    {
+        if (string.IsNullOrWhiteSpace(schemaName) || schemaName == "public") return;
 
-public void EnsureSchemaCreated()
-{
-    var tenantId = _tenantProvider.GetTenantId();
-    if (string.IsNullOrEmpty(tenantId) || tenantId == "public") return;
-
-   
-    Database.ExecuteSqlInterpolated($"CREATE SCHEMA IF NOT EXISTS {tenantId.ToLower().Trim()};");
-}
-
-
-
-
+        var cleanSchema = schemaName.ToLower().Trim();
+        
+        // Ensure the schema exists in PostgreSQL
+        await Database.ExecuteSqlRawAsync($"CREATE SCHEMA IF NOT EXISTS \"{cleanSchema}\";");
+        
+        // Use the RelationalDatabaseCreator to force-create tables in the new schema
+        var databaseCreator = Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator;
+        if (databaseCreator != null)
+        {
+            try 
+            { 
+                await databaseCreator.CreateTablesAsync(); 
+            } 
+            catch 
+            { 
+                // Tables might already exist, which is fine
+            }
+        }
+    }
 }

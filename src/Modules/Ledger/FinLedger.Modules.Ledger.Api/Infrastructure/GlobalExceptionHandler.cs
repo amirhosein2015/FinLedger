@@ -6,13 +6,16 @@ namespace FinLedger.Modules.Ledger.Api.Infrastructure;
 
 public class GlobalExceptionHandler : IExceptionHandler
 {
+    private readonly IHostEnvironment _env;
+    public GlobalExceptionHandler(IHostEnvironment env) => _env = env;
+
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
         var problemDetails = new ProblemDetails
         {
             Status = StatusCodes.Status500InternalServerError,
             Title = "Server Error",
-            Detail = exception.Message
+            Detail = _env.IsDevelopment() ? exception.ToString() : exception.Message // Show full error in Dev
         };
 
         if (exception is ValidationException validationException)

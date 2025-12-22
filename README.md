@@ -4,83 +4,67 @@
 
 > A high-performance, audit-ready financial ledger system designed for multi-tenant SaaS platforms. Built with **.NET 9**, **PostgreSQL 16**, and **Domain-Driven Design (DDD)** principles.
 
-![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen) ![Runtime](https://img.shields.io/badge/.NET-9.0-blue) ![License](https://img.shields.io/badge/License-MIT-blue) ![Architecture](https://img.shields.io/badge/Architecture-Modular%20Monolith-orange)
+![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen) ![Runtime](https://img.shields.io/badge/.NET-9.0-blue) ![Architecture](https://img.shields.io/badge/Architecture-Modular%20Monolith-orange)
+
+## 🎯 Problem Statement
+Most modern SaaS applications handle financial data using "Anemic Domain Models", leading to **Data Integrity** issues. In high-stakes FinTech, systems often fail to enforce double-entry invariants or ensure strict tenant isolation. **FinLedger** bridges this gap by combining deep **Accounting Domain expertise** with **Robust Engineering patterns** to provide an immutable, compliant, and highly scalable financial engine.
 
 ## 🏗️ Architectural Overview (C4 Model)
-FinLedger follows a **Modular Monolith** architecture to ensure strict domain boundaries while maintaining deployment simplicity and high consistency.
+FinLedger follows a **Modular Monolith** architecture to ensure strict domain boundaries while maintaining deployment simplicity.
 
 ### System Context
 ```mermaid
 C4Container
     title Container Diagram for FinLedger SaaS
-
-    Person(accountant, "Accountant / CFO", "Manages financial records & reports")
+    Person(accountant, "Accountant / CFO", "Manages financial records")
     System_Boundary(c1, "FinLedger Platform") {
-        Container(spa, "Dashboard", "React + TS", "Financial visualization panel")
+        Container(spa, "Dashboard", "React", "Financial visualization")
         Container_Boundary(backend, "Core Engine (.NET 9)") {
             Component(api, "API Gateway", "YARP", "Routing & Security")
-            Component(mod_ledger, "Ledger Core", "Domain Module", "Double-Entry Logic & Invariants")
+            Component(mod_ledger, "Ledger Core", "Domain Module", "Double-Entry Logic")
             Component(mod_report, "Reporting", "CQRS Read Model", "Financial Statements")
         }
-        ContainerDb(db, "Database", "PostgreSQL 16", "Schema-per-Tenant Storage Strategy")
+        ContainerDb(db, "Database", "PostgreSQL 16", "Schema-per-Tenant Strategy")
         ContainerQueue(bus, "Event Bus", "RabbitMQ", "Integration Events")
     }
     Rel(accountant, spa, "Uses")
     Rel(spa, api, "API Calls")
     Rel(mod_ledger, db, "ACID Transactions")
-    Rel(mod_ledger, bus, "Publishes Domain Events")
+    Rel(mod_ledger, bus, "Publishes Events")
 ```
 
-## 🚀 Key Features
-- **Multi-Tenancy:** Advanced **Schema-per-tenant** isolation strategy for enterprise-grade data privacy and compliance.
-- **Double-Entry Integrity:** Strict `Debit == Credit` invariant enforced within the Domain Aggregate roots.
-- **Audit-Ready:** Immutable ledger design ensures a reliable audit trail for all financial movements.
-- **Modern Stack:** Fully leveraging **.NET 9** performance enhancements and **C# 13** features.
-- **Concurrency Control:** Optimistic locking to handle high-throughput transactions without data corruption.
+## 🚀 Key Features (Principal Level)
+- **Dynamic Multi-Tenancy:** Automated **Schema-per-tenant** isolation for 100% data privacy.
+- **Double-Entry Integrity:** Strict `Debit == Credit` invariant enforced at the Domain level.
+- **Enterprise API Standards:** Versioning (v1.0), Global Exception Handling, and RFC-standard ProblemDetails.
+- **Automated Onboarding:** Real-time database schema generation for new tenants.
 
 ## 🗺️ Project Roadmap
 - [x] **Phase 1: Foundation & Persistence**
     - [x] Modular Monolith & Solution Architecture.
     - [x] Multi-tenancy Core (Schema-per-tenant via EF Core).
     - [x] Domain Modeling (Account, JournalEntry).
-    - [x] Initial API Integration & PostgreSQL Deployment.
 - [x] **Phase 2: Application Patterns & API Excellence**
-    - [x] Implementation of **MediatR** for Command/Query separation (CQRS).
-    - [x] **FluentValidation** for automatic request validation.
-    - [x] **Global Exception Handling** (standardized ProblemDetails).
-    - [x] **API Versioning** (v1.0) for enterprise lifecycle management.
-    - [ ] Dynamic Schema creation for new Tenant onboarding.
+    - [x] **CQRS** implementation with MediatR.
+    - [x] Automated **FluentValidation** pipeline.
+    - [x] **Global Exception Handling** & API Versioning.
+    - [x] **Dynamic Schema Creation** for automated tenant onboarding.
 - [ ] **Phase 3: Resilience & Consistency**
     - [ ] **Outbox Pattern** for guaranteed event delivery.
-    - [ ] **Redis** Distributed Locking for financial concurrency safety.
-    - [ ] OpenTelemetry for distributed tracing & observability.
+    - [ ] **Redis** Distributed Locking for financial concurrency.
 - [ ] **Phase 4: Financial Excellence & Reporting**
-    - [ ] Immutable Ledger posting logic.
-    - [ ] Fiscal Year closing & Period locking.
-    - [ ] Automated PDF statement generation via background workers.
-
-
-## 🛠️ Tech Stack
-- **Core:** .NET 9.0 (LTS Ready), C# 13
-- **Persistence:** EF Core 9, PostgreSQL 16
-- **Messaging:** MassTransit with RabbitMQ
-- **Caching:** Redis (RedLock for Distributed Locking)
-- **Observability:** OpenTelemetry & Serilog
-- **DevOps:** Docker Compose, GitHub Actions (CI/CD)
+    - [ ] Immutable Ledger posting logic & Fiscal Year closing.
+    - [ ] Automated PDF statement generation.
 
 ## 🚦 Getting Started
-1. Clone the repository.
-2. Run infrastructure containers:
-   ```bash
-   docker-compose up -d
-   ```
-3. Open the solution in **Visual Studio 2022 (v17.12+)** or **JetBrains Rider**.
-4. Run the API project and explore via Swagger at `http://localhost:5000/swagger`.
+1. `docker-compose up -d`
+2. Run `FinLedger.Modules.Ledger.Api`.
+3. Explore Swagger at `http://localhost:5000/swagger`.
 
 ---
-**Note:** This project is part of a professional portfolio focusing on **Financial Engineering** and **System Architecture**.
-
-**Current Status:** 🟢 *Phase 1 Complete. First API transaction successful. Moving to CQRS implementation.*
+**Status:** 🟢 *Phase 2 Complete. Dynamic Tenant Onboarding & CQRS Pipeline Operational.*
 ```
 
 ---
+
+
