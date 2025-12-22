@@ -9,6 +9,9 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.OpenApi.Models;
 using FluentValidation;
 using Asp.Versioning;
+using StackExchange.Redis;
+using FinLedger.BuildingBlocks.Application.Abstractions;
+using FinLedger.BuildingBlocks.Infrastructure.Resilience;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,6 +63,14 @@ builder.Services.AddValidatorsFromAssembly(typeof(ILedgerDbContext).Assembly);
 // Multi-tenancy Infrastructure
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantProvider, HttpHeaderTenantProvider>();
+
+
+
+// Redis
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+    ConnectionMultiplexer.Connect("localhost:6380")); 
+
+builder.Services.AddSingleton<IDistributedLock, RedisDistributedLock>();
 
 var app = builder.Build();
 

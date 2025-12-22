@@ -33,7 +33,7 @@ C4Container
     Rel(mod_ledger, bus, "Publishes Events")
 ```
 
-## 🚀 Key Features (Principal Level)
+## 🚀 Key Features 
 - **Dynamic Multi-Tenancy:** Automated **Schema-per-tenant** isolation for 100% data privacy.
 - **Double-Entry Integrity:** Strict `Debit == Credit` invariant enforced at the Domain level.
 - **Enterprise API Standards:** Versioning (v1.0), Global Exception Handling, and RFC-standard ProblemDetails.
@@ -44,17 +44,21 @@ C4Container
     - [x] Modular Monolith & Solution Architecture.
     - [x] Multi-tenancy Core (Schema-per-tenant via EF Core).
     - [x] Domain Modeling (Account, JournalEntry).
+    - [x] Initial API Integration & PostgreSQL Deployment.
 - [x] **Phase 2: Application Patterns & API Excellence**
-    - [x] **CQRS** implementation with MediatR.
-    - [x] Automated **FluentValidation** pipeline.
-    - [x] **Global Exception Handling** & API Versioning.
-    - [x] **Dynamic Schema Creation** for automated tenant onboarding.
+    - [x] Implementation of **MediatR** for Command/Query separation (CQRS).
+    - [x] **FluentValidation** for automatic request validation.
+    - [x] **Global Exception Handling** (standardized ProblemDetails).
+    - [x] **API Versioning** (v1.0) & Dynamic Schema Creation.
 - [ ] **Phase 3: Resilience & Consistency**
-    - [ ] **Outbox Pattern** for guaranteed event delivery.
-    - [ ] **Redis** Distributed Locking for financial concurrency.
+    - [x] **Redis Distributed Locking** using RedLock for financial concurrency safety.
+    - [ ] **Outbox Pattern** for guaranteed event delivery (Transactional Integrity).
+    - [ ] OpenTelemetry for distributed tracing & observability.
 - [ ] **Phase 4: Financial Excellence & Reporting**
     - [ ] Immutable Ledger posting logic & Fiscal Year closing.
-    - [ ] Automated PDF statement generation.
+    - [ ] High-performance reporting using optimized SQL/Dapper.
+    - [ ] Automated PDF statement generation via background workers.
+
 
 ## 🚦 Getting Started
 1. `docker-compose up -d`

@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FinLedger.Modules.Ledger.Domain\FinLedger.Modules.Ledger.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\FinLedger.BuildingBlocks.Application\FinLedger.BuildingBlocks.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

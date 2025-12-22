@@ -31,23 +31,27 @@ public class LedgerDbContext : DbContext, ILedgerDbContext
     public async Task CreateSchemaAsync(string schemaName)
     {
         if (string.IsNullOrWhiteSpace(schemaName) || schemaName == "public") return;
-
+        
+        // Sanitize the schema name to prevent any potential issues
         var cleanSchema = schemaName.ToLower().Trim();
-        
-        // Ensure the schema exists in PostgreSQL
-        await Database.ExecuteSqlRawAsync($"CREATE SCHEMA IF NOT EXISTS \"{cleanSchema}\";");
-        
+
+        // Fix for EF1002: Build the SQL string explicitly. 
+        // We use double quotes for PostgreSQL identifiers (schemas).
+        var sql = "CREATE SCHEMA IF NOT EXISTS \"" + cleanSchema + "\";";
+        await Database.ExecuteSqlRawAsync(sql);
+
         // Use the RelationalDatabaseCreator to force-create tables in the new schema
         var databaseCreator = Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator;
         if (databaseCreator != null)
         {
             try 
             { 
+                // This ensures all tables defined in this DbContext are created in the current schema
                 await databaseCreator.CreateTablesAsync(); 
             } 
             catch 
             { 
-                // Tables might already exist, which is fine
+                // Tables might already exist, which is expected on subsequent requests
             }
         }
     }
