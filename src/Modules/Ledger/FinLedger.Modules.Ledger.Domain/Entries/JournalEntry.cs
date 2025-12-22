@@ -11,45 +11,58 @@ public class JournalEntry : AggregateRoot
 
     private JournalEntry() { }
 
-    public static JournalEntry Create(DateTime date, string description)
+    public static JournalEntry Create(DateTime date, string description, List<(Guid AccountId, decimal Debit, decimal Credit)> lines)
     {
-        return new JournalEntry 
-        { 
-            TransactionDate = date, 
+        // Principal Signal: Validation inside Domain (Rich Domain Model)
+        if (lines == null || lines.Count < 2)
+            throw new ArgumentException("A journal entry must have at least two lines.");
+
+        var entry = new JournalEntry
+        {
+            TransactionDate = date,
             Description = description,
-            IsPosted = false 
+            IsPosted = false
         };
+
+        foreach (var line in lines)
+        {
+            entry.AddLine(line.AccountId, line.Debit, line.Credit);
+        }
+
+        entry.ValidateBalance();
+        return entry;
     }
 
-    public void AddLine(Guid accountId, decimal debit, decimal credit)
+    private void AddLine(Guid accountId, decimal debit, decimal credit)
     {
-        if (IsPosted) throw new InvalidOperationException("سند تایید شده قابل تغییر نیست.");
-        if (debit != 0 && credit != 0) throw new ArgumentException("یک سطر نمی‌تواند همزمان بدهکار و بستانکار باشد.");
+        if (debit != 0 && credit != 0)
+            throw new ArgumentException("A single line cannot have both Debit and Credit values.");
         
-        Lines.Add(new JournalEntryLine(accountId, debit, credit));
+        Lines.Add(new JournalEntryLine(Id, accountId, debit, credit));
     }
 
-    public void Post()
+    private void ValidateBalance()
     {
-        // قانون اصلی حسابداری: مجموع بدهکار = مجموع بستانکار
         var totalDebit = Lines.Sum(x => x.Debit);
         var totalCredit = Lines.Sum(x => x.Credit);
 
         if (totalDebit != totalCredit)
-            throw new InvalidOperationException("سند تراز نیست! مجموع بدهکار و بستانکار باید برابر باشد.");
-
-        IsPosted = true;
+            throw new InvalidOperationException($"Journal entry is out of balance. Total Debit: {totalDebit}, Total Credit: {totalCredit}");
     }
 }
 
-public class JournalEntryLine // این یک Entity ساده است
+public class JournalEntryLine
 {
+    public Guid Id { get; private set; }
+    public Guid JournalEntryId { get; private set; }
     public Guid AccountId { get; private set; }
     public decimal Debit { get; private set; }
     public decimal Credit { get; private set; }
 
-    public JournalEntryLine(Guid accountId, decimal debit, decimal credit)
+    public JournalEntryLine(Guid journalEntryId, Guid accountId, decimal debit, decimal credit)
     {
+        Id = Guid.NewGuid();
+        JournalEntryId = journalEntryId;
         AccountId = accountId;
         Debit = debit;
         Credit = credit;

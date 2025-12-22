@@ -48,16 +48,17 @@ C4Container
 - [x] **Phase 2: Application Patterns & API Excellence**
     - [x] Implementation of **MediatR** for Command/Query separation (CQRS).
     - [x] **FluentValidation** for automatic request validation.
-    - [x] **Global Exception Handling** (standardized ProblemDetails).
-    - [x] **API Versioning** (v1.0) & Dynamic Schema Creation.
-- [x] **Phase 3: Resilience & Consistency**
+    - [x] **Global Exception Handling** & API Versioning (v1.0).
+    - [x] **Dynamic Schema Creation** for automated tenant onboarding.
+- [ ] **Phase 3: Resilience & Consistency**
     - [x] **Redis Distributed Locking** using RedLock for financial concurrency safety.
     - [x] **Outbox Pattern** for guaranteed event delivery (Transactional Integrity).
-    - [ ] OpenTelemetry for distributed tracing & observability.
+    - [ ] **OpenTelemetry** for distributed tracing & observability.
 - [ ] **Phase 4: Financial Excellence & Reporting**
-    - [ ] Immutable Ledger posting logic & Fiscal Year closing.
+    - [ ] **Immutable Ledger** posting logic & Fiscal Year closing.
     - [ ] High-performance reporting using optimized SQL/Dapper.
     - [ ] Automated PDF statement generation via background workers.
+
 
 
 ## 🚦 Getting Started
