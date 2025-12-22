@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
   </ItemGroup>
 
@@ -16,6 +17,7 @@
     <ProjectReference Include="..\..\..\BuildingBlocks\FinLedger.BuildingBlocks.Domain\FinLedger.BuildingBlocks.Domain.csproj" />
     <ProjectReference Include="..\FinLedger.Modules.Ledger.Application\FinLedger.Modules.Ledger.Application.csproj" />
     <ProjectReference Include="..\FinLedger.Modules.Ledger.Domain\FinLedger.Modules.Ledger.Domain.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\FinLedger.BuildingBlocks.Infrastructure\FinLedger.BuildingBlocks.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

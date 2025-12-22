@@ -50,9 +50,9 @@ C4Container
     - [x] **FluentValidation** for automatic request validation.
     - [x] **Global Exception Handling** (standardized ProblemDetails).
     - [x] **API Versioning** (v1.0) & Dynamic Schema Creation.
-- [ ] **Phase 3: Resilience & Consistency**
+- [x] **Phase 3: Resilience & Consistency**
     - [x] **Redis Distributed Locking** using RedLock for financial concurrency safety.
-    - [ ] **Outbox Pattern** for guaranteed event delivery (Transactional Integrity).
+    - [x] **Outbox Pattern** for guaranteed event delivery (Transactional Integrity).
     - [ ] OpenTelemetry for distributed tracing & observability.
 - [ ] **Phase 4: Financial Excellence & Reporting**
     - [ ] Immutable Ledger posting logic & Fiscal Year closing.
