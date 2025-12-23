@@ -54,10 +54,12 @@ C4Container
     - [x] **Redis Distributed Locking** using RedLock for financial concurrency safety.
     - [x] **Outbox Pattern** for guaranteed event delivery (Transactional Integrity).
     - [ ] **OpenTelemetry** for distributed tracing & observability.
-- [ ] **Phase 4: Financial Excellence & Reporting**
-    - [ ] **Immutable Ledger** posting logic & Fiscal Year closing.
+ [ ] **Phase 4: Financial Excellence & Reporting**
+    - [x] **Immutable Ledger** posting logic & state machine.
+    - [x] **Reversal Logic** for automatic counter-entry creation.
     - [ ] High-performance reporting using optimized SQL/Dapper.
     - [ ] Automated PDF statement generation via background workers.
+
 
 
 

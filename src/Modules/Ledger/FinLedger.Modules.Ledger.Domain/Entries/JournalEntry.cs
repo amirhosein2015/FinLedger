@@ -15,6 +15,9 @@ public class JournalEntry : AggregateRoot
 
     private JournalEntry() { }
 
+    /// <summary>
+    /// Factory method to create a new journal entry in Draft status.
+    /// </summary>
     public static JournalEntry Create(DateTime date, string description, List<(Guid AccountId, decimal Debit, decimal Credit)> lines)
     {
         if (lines == null || lines.Count < 2)
@@ -22,6 +25,7 @@ public class JournalEntry : AggregateRoot
 
         var entry = new JournalEntry
         {
+            Id = Guid.NewGuid(),
             TransactionDate = date,
             Description = description,
             Status = JournalEntryStatus.Draft
@@ -36,6 +40,9 @@ public class JournalEntry : AggregateRoot
         return entry;
     }
 
+    /// <summary>
+    /// Finalizes the journal entry. Once posted, it cannot be modified or deleted.
+    /// </summary>
     public void Post()
     {
         if (Status != JournalEntryStatus.Draft)
@@ -43,6 +50,32 @@ public class JournalEntry : AggregateRoot
 
         ValidateBalance();
         Status = JournalEntryStatus.Posted;
+    }
+
+    /// <summary>
+    /// Creates a counter-entry to reverse the effects of a posted entry.
+    /// This is the only way to "undo" a transaction in a professional ledger.
+    /// </summary>
+    public JournalEntry CreateReversal(string reason)
+    {
+        if (Status != JournalEntryStatus.Posted)
+            throw new InvalidOperationException("Only posted entries can be reversed.");
+
+        // Create a list of lines with flipped Debit and Credit amounts
+        var reversalLines = Lines
+            .Select(l => (l.AccountId, l.Credit, l.Debit))
+            .ToList();
+        
+        var reversalDescription = $"Reversal of Entry {Id}: {reason}";
+        var reversalEntry = Create(DateTime.UtcNow, reversalDescription, reversalLines);
+        
+        // Mark this new entry as a Reversal type
+        reversalEntry.Status = JournalEntryStatus.Reversal;
+
+        // Update the original entry's status to indicate it has been reversed
+        this.Status = JournalEntryStatus.Reversed;
+        
+        return reversalEntry;
     }
 
     private void InternalAddLine(Guid accountId, decimal debit, decimal credit)
@@ -59,7 +92,7 @@ public class JournalEntry : AggregateRoot
         var totalCredit = Lines.Sum(x => x.Credit);
 
         if (totalDebit != totalCredit)
-            throw new InvalidOperationException($"Out of balance. Debit: {totalDebit}, Credit: {totalCredit}");
+            throw new InvalidOperationException($"Journal entry is out of balance. Total Debit: {totalDebit}, Total Credit: {totalCredit}");
     }
 }
 
@@ -74,7 +107,6 @@ public class JournalEntryLine
     public decimal Debit { get; private set; }
     public decimal Credit { get; private set; }
 
-    // Private constructor for EF Core
     private JournalEntryLine() { }
 
     public JournalEntryLine(Guid journalEntryId, Guid accountId, decimal debit, decimal credit)
@@ -86,3 +118,4 @@ public class JournalEntryLine
         Credit = credit;
     }
 }
+
