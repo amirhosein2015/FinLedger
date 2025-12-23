@@ -11,12 +11,22 @@ internal class JournalEntryConfiguration : IEntityTypeConfiguration<JournalEntry
         builder.ToTable("JournalEntries");
         builder.HasKey(x => x.Id);
 
-        // تنظیم رابطه یک به چند با Lines به صورت Owned Entity یا جداگانه
-        // اینجا به صورت جداگانه تنظیم می‌کنیم
+        builder.Property(x => x.Description).IsRequired().HasMaxLength(500);
+        
+        // Ensure Status is stored as an integer in the DB
+        builder.Property(x => x.Status).HasConversion<int>();
+
+        // Explicitly configure the collection of lines
         builder.OwnsMany(x => x.Lines, line => 
         {
             line.ToTable("JournalEntryLines");
-            line.WithOwner().HasForeignKey("JournalEntryId");
+            line.HasKey(x => x.Id);
+            
+            // Principal Signal: Tell EF Core that we generate Guids in C#, NOT the Database
+            line.Property(x => x.Id).ValueGeneratedNever(); 
+            
+            line.WithOwner().HasForeignKey(x => x.JournalEntryId);
+            
             line.Property(x => x.Debit).HasPrecision(18, 2);
             line.Property(x => x.Credit).HasPrecision(18, 2);
         });

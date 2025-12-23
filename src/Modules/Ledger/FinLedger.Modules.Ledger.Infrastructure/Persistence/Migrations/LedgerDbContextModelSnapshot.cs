@@ -89,10 +89,11 @@ namespace FinLedger.Modules.Ledger.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
-                    b.Property<bool>("IsPosted")
-                        .HasColumnType("boolean");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("TransactionDate")
                         .HasColumnType("timestamp with time zone");
@@ -106,14 +107,8 @@ namespace FinLedger.Modules.Ledger.Infrastructure.Persistence.Migrations
                 {
                     b.OwnsMany("FinLedger.Modules.Ledger.Domain.Entries.JournalEntryLine", "Lines", b1 =>
                         {
-                            b1.Property<Guid>("JournalEntryId")
+                            b1.Property<Guid>("Id")
                                 .HasColumnType("uuid");
-
-                            b1.Property<int>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("integer");
-
-                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
 
                             b1.Property<Guid>("AccountId")
                                 .HasColumnType("uuid");
@@ -126,7 +121,12 @@ namespace FinLedger.Modules.Ledger.Infrastructure.Persistence.Migrations
                                 .HasPrecision(18, 2)
                                 .HasColumnType("numeric(18,2)");
 
-                            b1.HasKey("JournalEntryId", "Id");
+                            b1.Property<Guid>("JournalEntryId")
+                                .HasColumnType("uuid");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("JournalEntryId");
 
                             b1.ToTable("JournalEntryLines", "public");
 
