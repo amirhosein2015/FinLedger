@@ -33,11 +33,22 @@ C4Container
     Rel(mod_ledger, bus, "Publishes Events")
 ```
 
-## 🚀 Key Features 
-- **Dynamic Multi-Tenancy:** Automated **Schema-per-tenant** isolation for 100% data privacy.
-- **Double-Entry Integrity:** Strict `Debit == Credit` invariant enforced at the Domain level.
-- **Enterprise API Standards:** Versioning (v1.0), Global Exception Handling, and RFC-standard ProblemDetails.
-- **Automated Onboarding:** Real-time database schema generation for new tenants.
+## 🚀 Core Features & Technical Excellence
+
+### 🏦 Advanced Financial Engine
+- **Immutable Ledger (Zero-Delete Policy):** Implements a high-integrity accounting system where journal entries are finalized (Posted) and cannot be modified or deleted. All corrections are handled through **Automated Reversal Logic**, ensuring a 100% reliable audit trail.
+- **Double-Entry Integrity:** The domain layer strictly enforces the fundamental accounting equation (`Sum(Debit) == Sum(Credit)`) as a system invariant, preventing out-of-balance transactions at the core level.
+
+### 🏗️ Enterprise Architecture Patterns
+- **Modular Monolith:** Designed with strict bounded contexts to ensure high maintainability and ease of future migration to microservices, while avoiding unnecessary distributed system overhead.
+- **CQRS with MediatR:** Clear separation of read and write concerns, improving performance and making the codebase highly testable and extensible.
+- **Outbox Pattern:** Guarantees transactional consistency between the database and external systems. Financial events are captured within the same atomic transaction as the business data, ensuring 100% delivery reliability.
+
+### 🔐 Infrastructure & Resilience
+- **Automated Multi-Tenancy:** Uses a sophisticated **Schema-per-Tenant** isolation strategy. The system dynamically creates and migrates database schemas for new tenants on-the-fly, ensuring maximum data privacy and regulatory compliance.
+- **Redis Distributed Locking (RedLock):** Prevents race conditions during concurrent financial operations. This ensures that sensitive resources (like account balances) are never compromised during high-throughput traffic.
+- **Global Error Handling:** Implements RFC 7807 (Problem Details for HTTP APIs), providing standardized, machine-readable error responses for all validation and system failures.
+
 
 ## 🗺️ Project Roadmap
 - [x] **Phase 1: Foundation & Persistence**
