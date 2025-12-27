@@ -420,3 +420,8 @@ FodyWeavers.xsd
 
 # Ignore local database data
 deploy/data/
+
+
+# Build artifacts
+[Bb]in/
+[Oo]bj/

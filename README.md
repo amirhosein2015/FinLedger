@@ -49,6 +49,7 @@ C4Container
 - **Redis Distributed Locking (RedLock):** Prevents race conditions during concurrent financial operations. This ensures that sensitive resources (like account balances) are never compromised during high-throughput traffic.
 - **Global Error Handling:** Implements RFC 7807 (Problem Details for HTTP APIs), providing standardized, machine-readable error responses for all validation and system failures.
 
+Health Monitoring: Integrated ASP.NET Core Health Checks for real-time monitoring of PostgreSQL and Redis connectivity.
 
 ## 🗺️ Project Roadmap
 - [x] **Phase 1: Foundation & Persistence**

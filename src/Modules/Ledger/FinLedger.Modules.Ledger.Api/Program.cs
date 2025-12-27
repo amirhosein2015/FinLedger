@@ -12,6 +12,7 @@ using Asp.Versioning;
 using StackExchange.Redis;
 using FinLedger.BuildingBlocks.Application.Abstractions;
 using FinLedger.BuildingBlocks.Infrastructure.Resilience;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +39,7 @@ builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "FinLedger Enterprise API", Version = "v1" });
 });
 
+// Resilience: Centralized exception handling
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
@@ -64,13 +66,15 @@ builder.Services.AddValidatorsFromAssembly(typeof(ILedgerDbContext).Assembly);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantProvider, HttpHeaderTenantProvider>();
 
-
-
-// Redis
+// Distributed Resilience Services (Redis)
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
     ConnectionMultiplexer.Connect("localhost:16379")); 
-
 builder.Services.AddSingleton<IDistributedLock, RedisDistributedLock>();
+
+// Enterprise Observability: Health Monitoring
+builder.Services.AddHealthChecks()
+    .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!, name: "PostgreSQL")
+    .AddRedis("localhost:16379", name: "Redis Cache");
 
 var app = builder.Build();
 
@@ -90,7 +94,10 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// Request Pipeline Middleware
+// Map health check endpoint for monitoring tools
+app.MapHealthChecks("/health");
+
+// Custom Middleware Pipeline
 app.UseMiddleware<TenantMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
