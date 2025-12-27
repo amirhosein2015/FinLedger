@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: SecurePassword123!
       POSTGRES_DB: finledger_core
     ports:
-      - "5435:5432" # 
+      - "15432:5432" # 
     volumes:
       - ./deploy/data/postgres:/var/lib/postgresql/data # 
 
@@ -21,7 +21,7 @@ services:
     container_name: finledger_redis
     restart: always
     ports:
-      - "6380:6379" # پورت متفاوت
+      - "16379:6379" # پورت متفاوت
     volumes:
       - ./deploy/data/redis:/data
 
@@ -31,8 +31,8 @@ services:
     container_name: finledger_bus
     restart: always
     ports:
-      - "15673:15672" # داشبورد مدیریت (Management UI)
-      - "5673:5672"   # پورت اصلی
+      - "15672:15672" # داشبورد مدیریت (Management UI)
+      - "15673:5672"   # پورت اصلی
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest

@@ -68,7 +68,7 @@ builder.Services.AddScoped<ITenantProvider, HttpHeaderTenantProvider>();
 
 // Redis
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-    ConnectionMultiplexer.Connect("localhost:6380")); 
+    ConnectionMultiplexer.Connect("localhost:16379")); 
 
 builder.Services.AddSingleton<IDistributedLock, RedisDistributedLock>();
 
