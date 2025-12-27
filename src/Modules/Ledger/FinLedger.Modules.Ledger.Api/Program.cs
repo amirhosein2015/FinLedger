@@ -1,6 +1,7 @@
 using FinLedger.BuildingBlocks.Domain;
 using FinLedger.BuildingBlocks.Application;
 using FinLedger.Modules.Ledger.Api.Infrastructure;
+using FinLedger.Modules.Ledger.Api.Infrastructure.Reports;
 using FinLedger.Modules.Ledger.Infrastructure.Persistence;
 using FinLedger.Modules.Ledger.Application.Abstractions;
 using Microsoft.EntityFrameworkCore;
@@ -16,12 +17,16 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
+using QuestPDF.Infrastructure;
 
-// Step 1: Configure Serilog immediately upon startup to catch early errors
+// 1. Setup QuestPDF License (Community Edition)
+QuestPDF.Settings.License = LicenseType.Community;
+
+// 2. Configure Serilog for Structured Logging
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
-    .WriteTo.Console(new RenderedCompactJsonFormatter()) // Produces structured JSON logs
+    .WriteTo.Console(new RenderedCompactJsonFormatter())
     .CreateLogger();
 
 try
@@ -30,7 +35,6 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
-    // Step 2: Use Serilog as the logging provider
     builder.Host.UseSerilog();
 
     // API Versioning Configuration
@@ -48,7 +52,7 @@ try
 
     builder.Services.AddControllers();
 
-    // Swagger Documentation with Tenant Header Support
+    // Swagger Configuration
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options => 
     {
@@ -56,11 +60,10 @@ try
         options.SwaggerDoc("v1", new OpenApiInfo { Title = "FinLedger Enterprise API", Version = "v1" });
     });
 
-    // Resilience: Centralized exception handling
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
 
-    // Database Persistence Configuration
+    // Database Configuration
     builder.Services.AddDbContext<LedgerDbContext>((serviceProvider, dbOptions) =>
     {
         dbOptions.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
@@ -70,7 +73,7 @@ try
 
     builder.Services.AddScoped<ILedgerDbContext>(p => p.GetRequiredService<LedgerDbContext>());
 
-    // MediatR and Validation Pipeline setup
+    // MediatR & Validation
     builder.Services.AddMediatR(cfg => 
     {
         cfg.RegisterServicesFromAssembly(typeof(ILedgerDbContext).Assembly);
@@ -79,25 +82,23 @@ try
 
     builder.Services.AddValidatorsFromAssembly(typeof(ILedgerDbContext).Assembly);
 
-    // Multi-tenancy Infrastructure
+    // Identity & Tenant Infrastructure
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ITenantProvider, HttpHeaderTenantProvider>();
 
-    // Distributed Resilience Services (Redis)
+    // Resilience & Redis
     builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
         ConnectionMultiplexer.Connect("localhost:16379")); 
     builder.Services.AddSingleton<IDistributedLock, RedisDistributedLock>();
 
-    // Enterprise Observability: Health Monitoring
+    // Observability: Health Checks
     builder.Services.AddHealthChecks()
         .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!, name: "PostgreSQL")
         .AddRedis("localhost:16379", name: "Redis Cache");
 
     var app = builder.Build();
 
-    // Step 3: Global HTTP Request Logging
-    app.UseSerilogRequestLogging(); 
-
+    app.UseSerilogRequestLogging();
     app.UseExceptionHandler();
 
     if (app.Environment.IsDevelopment())
@@ -114,10 +115,7 @@ try
         });
     }
 
-    // Map health check endpoint
     app.MapHealthChecks("/health");
-
-    // Custom Middleware Pipeline
     app.UseMiddleware<TenantMiddleware>();
     app.UseAuthorization();
     app.MapControllers();

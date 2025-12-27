@@ -1,0 +1,88 @@
+using FinLedger.Modules.Ledger.Application.Abstractions.Reporting;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+
+namespace FinLedger.Modules.Ledger.Api.Infrastructure.Reports;
+
+public static class TrialBalancePdfGenerator
+{
+    public static byte[] Generate(string tenantName, IReadOnlyCollection<AccountBalanceDto> balances)
+    {
+        // Set the license again to be safe inside the static method
+        QuestPDF.Settings.License = LicenseType.Community;
+
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(1, Unit.Centimetre);
+                page.PageColor(Colors.White);
+                page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Verdana));
+
+                // Header
+                page.Header().Row(row =>
+                {
+                    row.RelativeItem().Column(col =>
+                    {
+                        col.Item().Text($"Trial Balance Report").FontSize(20).SemiBold().FontColor(Colors.Blue.Medium);
+                        col.Item().Text($"Tenant: {tenantName}").FontSize(12).FontColor(Colors.Grey.Medium);
+                    });
+
+                    row.RelativeItem().AlignRight().Text(DateTime.Now.ToString("yyyy-MM-dd HH:mm")).FontSize(10);
+                });
+
+                // Content (Table)
+                page.Content().PaddingVertical(10).Table(table =>
+                {
+                    // Correct Column Definition
+                    table.ColumnsDefinition(columns =>
+                    {
+                        columns.RelativeColumn(3); // Account Name/Code
+                        columns.RelativeColumn(1); // Total Debit
+                        columns.RelativeColumn(1); // Total Credit
+                        columns.RelativeColumn(1); // Balance
+                    });
+
+                    // Table Header
+                    table.Header(header =>
+                    {
+                        header.Cell().Element(CellStyle).Text("Account");
+                        header.Cell().Element(CellStyle).AlignRight().Text("Total Debit");
+                        header.Cell().Element(CellStyle).AlignRight().Text("Total Credit");
+                        header.Cell().Element(CellStyle).AlignRight().Text("Balance");
+
+                        static IContainer CellStyle(IContainer container) => 
+                            container.DefaultTextStyle(x => x.SemiBold())
+                                     .PaddingVertical(5)
+                                     .BorderBottom(1)
+                                     .BorderColor(Colors.Black);
+                    });
+
+                    // Table Rows
+                    foreach (var item in balances)
+                    {
+                        table.Cell().Element(RowStyle).Text($"{item.AccountCode} - {item.AccountName}");
+                        table.Cell().Element(RowStyle).AlignRight().Text(item.TotalDebit.ToString("N2"));
+                        table.Cell().Element(RowStyle).AlignRight().Text(item.TotalCredit.ToString("N2"));
+                        table.Cell().Element(RowStyle).AlignRight().Text(item.Balance.ToString("N2"));
+
+                        static IContainer RowStyle(IContainer container) => 
+                            container.PaddingVertical(5)
+                                     .BorderBottom(1)
+                                     .BorderColor(Colors.Grey.Lighten3);
+                    }
+                });
+
+                // Footer
+                page.Footer().AlignCenter().Text(x =>
+                {
+                    x.Span("Page ");
+                    x.CurrentPageNumber();
+                });
+            });
+        });
+
+        return document.GeneratePdf();
+    }
+}

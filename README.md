@@ -56,21 +56,20 @@ Health Monitoring: Integrated ASP.NET Core Health Checks for real-time monitorin
     - [x] Modular Monolith & Solution Architecture.
     - [x] Multi-tenancy Core (Schema-per-tenant via EF Core).
     - [x] Domain Modeling (Account, JournalEntry).
-    - [x] Initial API Integration & PostgreSQL Deployment.
 - [x] **Phase 2: Application Patterns & API Excellence**
     - [x] Implementation of **MediatR** for Command/Query separation (CQRS).
-    - [x] **FluentValidation** for automatic request validation.
-    - [x] **Global Exception Handling** & API Versioning (v1.0).
+    - [x] **FluentValidation** & Global Exception Handling.
     - [x] **Dynamic Schema Creation** for automated tenant onboarding.
-- [ ] **Phase 3: Resilience & Consistency**
-    - [x] **Redis Distributed Locking** using RedLock for financial concurrency safety.
+- [x] **Phase 3: Resilience & Consistency**
+    - [x] **Redis Distributed Locking** for financial concurrency safety.
     - [x] **Outbox Pattern** for guaranteed event delivery (Transactional Integrity).
-    - [ ] **OpenTelemetry** for distributed tracing & observability.
+    - [x] **Structured Logging** with Serilog & JSON formatting.
 - [x] **Phase 4: Financial Excellence & Reporting**
     - [x] **Immutable Ledger** posting logic & state machine.
     - [x] **Reversal Logic** for automatic counter-entry creation.
     - [x] **High-performance reporting** using optimized SQL/Dapper.
-    - [ ] Automated PDF statement generation via background workers.
+    - [x] **Automated PDF generation** for financial statements (QuestPDF).
+
 
 
 
