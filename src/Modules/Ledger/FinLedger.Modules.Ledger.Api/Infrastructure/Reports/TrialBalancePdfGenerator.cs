@@ -9,7 +9,6 @@ public static class TrialBalancePdfGenerator
 {
     public static byte[] Generate(string tenantName, IReadOnlyCollection<AccountBalanceDto> balances)
     {
-        // Set the license again to be safe inside the static method
         QuestPDF.Settings.License = LicenseType.Community;
 
         var document = Document.Create(container =>
@@ -20,61 +19,67 @@ public static class TrialBalancePdfGenerator
                 page.PageColor(Colors.White);
                 page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Verdana));
 
-                // Header
+                // Document Header
                 page.Header().Row(row =>
                 {
                     row.RelativeItem().Column(col =>
                     {
-                        col.Item().Text($"Trial Balance Report").FontSize(20).SemiBold().FontColor(Colors.Blue.Medium);
-                        col.Item().Text($"Tenant: {tenantName}").FontSize(12).FontColor(Colors.Grey.Medium);
+                        col.Item().Text("Trial Balance Report").FontSize(24).SemiBold().FontColor(Colors.Blue.Medium);
+                        col.Item().Text($"Tenant: {tenantName}").FontSize(12).Italic().FontColor(Colors.Grey.Darken2);
                     });
 
                     row.RelativeItem().AlignRight().Text(DateTime.Now.ToString("yyyy-MM-dd HH:mm")).FontSize(10);
                 });
 
-                // Content (Table)
-                page.Content().PaddingVertical(10).Table(table =>
+                // Content Area
+                page.Content().PaddingVertical(10).Column(column => 
                 {
-                    // Correct Column Definition
-                    table.ColumnsDefinition(columns =>
+                    if (balances == null || !balances.Any())
                     {
-                        columns.RelativeColumn(3); // Account Name/Code
-                        columns.RelativeColumn(1); // Total Debit
-                        columns.RelativeColumn(1); // Total Credit
-                        columns.RelativeColumn(1); // Balance
-                    });
-
-                    // Table Header
-                    table.Header(header =>
+                        column.Item().PaddingTop(20).AlignCenter().Text("No posted transactions found for this tenant.")
+                            .FontSize(14).FontColor(Colors.Red.Medium);
+                    }
+                    else
                     {
-                        header.Cell().Element(CellStyle).Text("Account");
-                        header.Cell().Element(CellStyle).AlignRight().Text("Total Debit");
-                        header.Cell().Element(CellStyle).AlignRight().Text("Total Credit");
-                        header.Cell().Element(CellStyle).AlignRight().Text("Balance");
+                        column.Item().Table(table =>
+                        {
+                            // Correct Column Definitions
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(3); // Account
+                                columns.RelativeColumn(1); // Debit
+                                columns.RelativeColumn(1); // Credit
+                                columns.RelativeColumn(1); // Balance
+                            });
 
-                        static IContainer CellStyle(IContainer container) => 
-                            container.DefaultTextStyle(x => x.SemiBold())
-                                     .PaddingVertical(5)
-                                     .BorderBottom(1)
-                                     .BorderColor(Colors.Black);
-                    });
+                            // Table Header
+                            table.Header(header =>
+                            {
+                                header.Cell().Element(CellStyle).Text("Account");
+                                header.Cell().Element(CellStyle).AlignRight().Text("Total Debit");
+                                header.Cell().Element(CellStyle).AlignRight().Text("Total Credit");
+                                header.Cell().Element(CellStyle).AlignRight().Text("Balance");
 
-                    // Table Rows
-                    foreach (var item in balances)
-                    {
-                        table.Cell().Element(RowStyle).Text($"{item.AccountCode} - {item.AccountName}");
-                        table.Cell().Element(RowStyle).AlignRight().Text(item.TotalDebit.ToString("N2"));
-                        table.Cell().Element(RowStyle).AlignRight().Text(item.TotalCredit.ToString("N2"));
-                        table.Cell().Element(RowStyle).AlignRight().Text(item.Balance.ToString("N2"));
+                                static IContainer CellStyle(IContainer container) => 
+                                    container.DefaultTextStyle(x => x.SemiBold()).PaddingVertical(5).BorderBottom(1).BorderColor(Colors.Black);
+                            });
 
-                        static IContainer RowStyle(IContainer container) => 
-                            container.PaddingVertical(5)
-                                     .BorderBottom(1)
-                                     .BorderColor(Colors.Grey.Lighten3);
+                            // Table Data Rows
+                            foreach (var item in balances)
+                            {
+                                table.Cell().Element(RowStyle).Text($"{item.AccountCode} - {item.AccountName}");
+                                table.Cell().Element(RowStyle).AlignRight().Text(item.TotalDebit.ToString("N2"));
+                                table.Cell().Element(RowStyle).AlignRight().Text(item.TotalCredit.ToString("N2"));
+                                table.Cell().Element(RowStyle).AlignRight().Text(item.Balance.ToString("N2"));
+
+                                static IContainer RowStyle(IContainer container) => 
+                                    container.PaddingVertical(5).BorderBottom(1).BorderColor(Colors.Grey.Lighten3);
+                            }
+                        });
                     }
                 });
 
-                // Footer
+                // Page Footer
                 page.Footer().AlignCenter().Text(x =>
                 {
                     x.Span("Page ");

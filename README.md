@@ -51,6 +51,14 @@ C4Container
 
 Health Monitoring: Integrated ASP.NET Core Health Checks for real-time monitoring of PostgreSQL and Redis connectivity.
 
+
+### 📊 Financial Reporting & Insights
+- **Professional PDF Export:** Integrated **QuestPDF** engine to generate high-fidelity, audit-ready financial statements (Trial Balance) with enterprise-grade layouts and automatic pagination.
+- **High-Performance Analytics:** Utilizes **Dapper** and optimized Raw SQL for reporting queries, ensuring sub-second response times by decoupling read-heavy operations from the primary ORM.
+- **Structured Logging & Observability:** Powered by **Serilog** with JSON formatting, enabling cloud-native log analysis and deep traceability of financial transactions.
+- **Demo Data Seeding:** Built-in automated seeding engine to generate complex, balanced financial scenarios for instant testing and demonstration purposes.
+
+
 ## 🗺️ Project Roadmap
 - [x] **Phase 1: Foundation & Persistence**
     - [x] Modular Monolith & Solution Architecture.
