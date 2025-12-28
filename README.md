@@ -1,3 +1,4 @@
+
 # 🏦 FinLedger SaaS
 **Cloud-Native Double-Entry Accounting Engine**
 
@@ -6,49 +7,91 @@
 ![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen) ![Runtime](https://img.shields.io/badge/.NET-9.0-blue) ![Architecture](https://img.shields.io/badge/Architecture-Modular%20Monolith-orange)
 
 ## 🎯 Problem Statement
-Most modern SaaS applications handle financial data using "Anemic Domain Models", leading to **Data Integrity** issues. **FinLedger** bridges the gap by combining deep **Accounting Domain expertise** with **Robust Engineering patterns** to provide an immutable, compliant, and highly scalable financial engine.
-
-## 🏗️ Architectural Excellence
-FinLedger is designed as a **Modular Monolith** to ensure strict domain boundaries and high maintainability.
-
-- **[Read the Full Architecture Deep Dive (ARCHITECTURE.md)](./ARCHITECTURE.md)**
-- **[View Implementation Trade-offs & Decisions](./ARCHITECTURE.md#2-multi-tenancy-schema-per-tenant)**
-
-### 🕹️ End-to-End Transaction Flow
-1. **Request:** Tenant initiates a transfer via Versioned API (v1.0).
-2. **Concurrency:** A **Redis Lock** is acquired to ensure serialized access to accounts.
-3. **Logic:** The **Domain Layer** validates the Double-Entry balance (Debit == Credit).
-4. **Persistence:** The Ledger record and an **Outbox Message** are saved in a single **ACID Transaction**.
-5. **Worker:** A background service processes the Outbox to notify external systems.
-6. **Reporting:** Optimized **Dapper** queries generate sub-second financial reports.
-
-## 🚀 Key Features & Production Guarantees
-- **Immutable Ledger:** No hard deletes. Every correction is an automated **Reversal Entry**.
-- **Dynamic Multi-Tenancy:** Automated PostgreSQL schema generation per tenant.
-- **Transactional Integrity:** Zero-event-loss guarantee via the **Outbox Pattern**.
-- **Observability:** Standardized JSON logging (Serilog) and built-in Health Monitoring.
-- **Enterprise Reporting:** Professional PDF exports (QuestPDF) and high-speed JSON analytics.
-
-## 🗺️ Project Roadmap
-- [x] **Phase 1-4:** Core Financial Engine, Multi-tenancy, Resilience, and Reporting.
-- [ ] **Phase 5: Automated Quality Assurance**
-    - Unit Tests for accounting invariants & Integration Tests with **TestContainers**.
-- [ ] **Phase 6: Advanced Identity & RBAC**
-    - Multi-tenant Role-Based Access Control (Admin, Accountant, Auditor).
-- [ ] **Phase 7: Cloud-Native Observability**
-    - Distributed tracing with **OpenTelemetry** & Jaeger.
-
-## 🛠️ Tech Stack
-- **Backend:** .NET 9 (C# 13), MediatR (CQRS), FluentValidation.
-- **Data:** PostgreSQL 16 (Schema Isolation), EF Core 9, Dapper.
-- **Resilience:** Redis (RedLock), Outbox Pattern, Serilog.
-- **DevOps:** Docker Compose, Health Checks.
-
-## 🚦 Getting Started
-1. `docker-compose up -d`
-2. Run `FinLedger.Modules.Ledger.Api`.
-3. Use `/api/v1/ledger/Reports/seed-demo-data` to generate test data.
-4. Access Swagger at `http://localhost:5000/swagger`.
+Most modern SaaS applications handle financial data using "Anemic Domain Models", leading to **Data Integrity** issues. In high-stakes FinTech, systems often fail to enforce double-entry invariants or ensure strict tenant isolation. **FinLedger** bridges this gap by combining deep **Accounting Domain expertise** with **Robust Engineering patterns** to provide an immutable, compliant, and highly scalable financial engine.
 
 ---
-**Status:** 🏆 *Core Ledger Engine Operational. Ready for Enterprise integration.*
+
+## 🏗️ Architectural Overview (C4 Model)
+FinLedger follows a **Modular Monolith** architecture to ensure strict domain boundaries while maintaining deployment simplicity and high consistency.
+
+### System Context & Container Diagram
+```mermaid
+C4Container
+    title Container Diagram for FinLedger SaaS
+
+    Person(accountant, "Accountant / CFO", "Manages financial records & reports")
+    System_Boundary(c1, "FinLedger Platform") {
+        Container(spa, "Dashboard", "React + TS", "Financial visualization panel")
+        Container_Boundary(backend, "Core Engine (.NET 9)") {
+            Component(api, "API Gateway", "Versioning & Rate Limiting", "Entry point for all tenants")
+            Component(mod_ledger, "Ledger Core", "Domain Module", "Double-Entry Logic & Invariants")
+            Component(mod_report, "Reporting", "CQRS Read Model", "High-performance analytics")
+            Component(worker, "Outbox Worker", "Background Service", "Event publishing & reliability")
+        }
+        ContainerDb(db, "Database", "PostgreSQL 16", "Schema-per-Tenant Strategy")
+        ContainerDb(redis, "Cache & Lock", "Redis", "Distributed Locking (RedLock)")
+        ContainerQueue(bus, "Event Bus", "RabbitMQ", "Integration Events")
+    }
+    Rel(accountant, spa, "Uses")
+    Rel(spa, api, "API Calls (v1.0)")
+    Rel(mod_ledger, db, "ACID Transactions")
+    Rel(mod_ledger, bus, "Publishes via Outbox")
+    Rel(worker, mod_report, "Materializes Views")
+```
+
+> **Strategic Note:** We chose a Modular Monolith over Microservices to maintain **Transactional Integrity** and reduce operational complexity while remaining "Microservices-ready". 
+> **[Read more about our Strategic Decisions (ARCHITECTURE.md)](./ARCHITECTURE.md)**
+
+---
+
+## 🚀 Core Features & Technical Excellence
+
+### 🏦 Advanced Financial Engine
+- **Immutable Ledger (Zero-Delete Policy):** Implements a high-integrity accounting system where journal entries are finalized (Posted) and cannot be modified or deleted. All corrections are handled through **Automated Reversal Logic**, ensuring a 100% reliable audit trail.
+- **Double-Entry Integrity:** The domain layer strictly enforces the fundamental accounting equation (`Sum(Debit) == Sum(Credit)`) as a system invariant, preventing out-of-balance transactions at the core level.
+
+### 🏗️ Enterprise Architecture Patterns
+- **CQRS with MediatR:** Clear separation of read and write concerns. Write operations use EF Core for complex business logic, while Read operations use **Dapper** for sub-second reporting performance.
+- **Outbox Pattern:** Guarantees transactional consistency. Financial events are captured within the same atomic transaction as the business data, ensuring **Exactly-once processing** and preventing data loss during network failures.
+
+### 🔐 Infrastructure & Resilience
+- **Automated Multi-Tenancy:** Uses a sophisticated **Schema-per-Tenant** isolation strategy. The system dynamically creates and migrates database schemas for new tenants on-the-fly, ensuring maximum data privacy and regulatory compliance (GDPR/SOC2).
+- **Distributed Locking (RedLock):** Leverages Redis to prevent race conditions during concurrent financial operations, ensuring deterministic states in a horizontally scaled environment.
+- **Observability:** 
+    - **Structured Logging:** Powered by **Serilog** with JSON formatting for cloud-native log analysis.
+    - **Health Monitoring:** Integrated ASP.NET Core Health Checks for PostgreSQL and Redis connectivity.
+
+### 📊 Financial Reporting & Insights
+- **Professional PDF Export:** Integrated **QuestPDF** engine to generate audit-ready Trial Balance reports with enterprise-grade layouts and automatic pagination.
+- **Demo Data Seeding:** Built-in automated seeding engine to generate complex, balanced financial scenarios for instant testing and demonstration.
+
+---
+
+## 🕹️ End-to-End Scenario: The Life of a Transaction
+To see the system's robustness, consider this flow:
+1. **Request:** A Tenant initiates a transfer via the Versioned API.
+2. **Concurrency:** A **Redis Lock** is acquired to ensure serialized access to specific accounts.
+3. **Validation:** The **MediatR Pipeline** triggers **FluentValidation** followed by Domain-level invariant checks.
+4. **Persistence:** The Ledger record and an **Outbox Message** are saved in a single **ACID Transaction**.
+5. **Reliability:** The **Background Worker** ensures the event is published even if the primary API process crashes.
+6. **Insight:** The **Reporting Engine** extracts data from the isolated schema to produce a professional PDF report.
+
+---
+
+## 🗺️ Project Roadmap
+- [x] **Phase 1-4:** Core Engine, Multi-tenancy, Outbox, Redis Locking, and PDF Reporting.
+- [ ] **Phase 5: Automated Quality Assurance**
+    - Unit Tests for invariants & Integration Tests with **TestContainers**.
+- [ ] **Phase 6: Advanced Identity & RBAC**
+    - Multi-tenant Role-Based Access Control (Admin, Accountant, Auditor).
+
+## 🛠️ Tech Stack
+- **Framework:** .NET 9 (C# 13), MediatR, FluentValidation, Serilog.
+- **Data:** PostgreSQL 16 (Schema Isolation), EF Core 9, Dapper, Redis.
+- **DevOps:** Docker Compose, QuestPDF, Health Checks.
+
+---
+**Status:** 🏆 *Production-Grade Ledger Engine Operational.*
+```
+
+---
