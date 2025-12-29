@@ -1,11 +1,12 @@
-using FinLedger.BuildingBlocks.Application.Abstractions; // for IDistributedLock
+using FinLedger.BuildingBlocks.Application.Abstractions; 
 using FinLedger.Modules.Ledger.Application.Abstractions;
 using FinLedger.Modules.Ledger.Domain.Accounts;
 using MediatR;
 
 namespace FinLedger.Modules.Ledger.Application.Accounts.CreateAccount;
 
-internal class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand, Guid>
+//Using 'sealed' to improve performance via devirtualization
+internal sealed class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand, Guid>
 {
     private readonly ILedgerDbContext _dbContext;
     private readonly IDistributedLock _distributedLock; 
@@ -21,12 +22,12 @@ internal class CreateAccountCommandHandler : IRequestHandler<CreateAccountComman
         // Define a unique lock key per Tenant and Account Code
         var lockKey = $"lock:tenant:{_dbContext.TenantId}:account:{request.Code}";
         
-        // Attempt to acquire the distributed lock for 10 seconds
+        // Attempt to acquire the distributed lock for 10 seconds to ensure consistency
         using (var handle = await _distributedLock.AcquireAsync(lockKey, TimeSpan.FromSeconds(10)))
         {
             if (handle == null)
             {
-                // If lock cannot be acquired, it means another process is handling this account code
+                // Concurrency Guard: Prevent duplicate account codes in highly distributed environments
                 throw new InvalidOperationException($"The account code '{request.Code}' is currently being processed.");
             }
 

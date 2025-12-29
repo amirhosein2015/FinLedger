@@ -29,6 +29,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{54644E85
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinLedger.Modules.Ledger.Tests.Unit", "tests\FinLedger.Modules.Ledger.Tests.Unit\FinLedger.Modules.Ledger.Tests.Unit.csproj", "{84A85288-4914-4DC0-85B4-1FFB654E8BCE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinLedger.Tests.Architecture", "tests\FinLedger.Tests.Architecture\FinLedger.Tests.Architecture.csproj", "{FB6AFFE7-1228-4C1A-B774-E845E2957278}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,6 +72,10 @@ Global
 		{84A85288-4914-4DC0-85B4-1FFB654E8BCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84A85288-4914-4DC0-85B4-1FFB654E8BCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84A85288-4914-4DC0-85B4-1FFB654E8BCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB6AFFE7-1228-4C1A-B774-E845E2957278}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB6AFFE7-1228-4C1A-B774-E845E2957278}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB6AFFE7-1228-4C1A-B774-E845E2957278}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB6AFFE7-1228-4C1A-B774-E845E2957278}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C5E540D7-8250-496B-8728-F90B0696BE39} = {D05C0720-47F1-4850-A278-B8604DCE7ABB}
@@ -83,5 +89,6 @@ Global
 		{8BFD6DC6-CE78-4106-A242-B1959621B70F} = {D25202B2-2A59-440C-8D8D-F75229970796}
 		{8D856BF7-0ABB-425F-A55E-582D8078ABBF} = {C5E540D7-8250-496B-8728-F90B0696BE39}
 		{84A85288-4914-4DC0-85B4-1FFB654E8BCE} = {54644E85-CD5F-4D5D-9B24-C19F531CECB6}
+		{FB6AFFE7-1228-4C1A-B774-E845E2957278} = {54644E85-CD5F-4D5D-9B24-C19F531CECB6}
 	EndGlobalSection
 EndGlobal

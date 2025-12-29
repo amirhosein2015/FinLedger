@@ -65,6 +65,15 @@ C4Container
 - **Professional PDF Export:** Integrated **QuestPDF** engine to generate audit-ready Trial Balance reports with enterprise-grade layouts and automatic pagination.
 - **Demo Data Seeding:** Built-in automated seeding engine to generate complex, balanced financial scenarios for instant testing and demonstration.
 
+
+### 🛡️ Automated Quality Assurance
+FinLedger is guarded by a multi-layered testing suite to ensure financial accuracy and architectural purity:
+- **Domain Invariant Protection:** Rigorous testing of the `JournalEntry` aggregate root to prevent unbalanced transactions or illegal state transitions.
+- **Architectural Guardrails:** Automated tests that verify modular boundaries, ensuring that the Domain layer remains pure and no prohibited dependencies (e.g., Infrastructure -> Domain) are introduced during development.
+- **Application Logic Verification:** Mocking external concerns with **NSubstitute** to verify command handlers, concurrency locks, and reliable messaging (Outbox).
+
+
+
 ---
 
 ## 🕹️ End-to-End Scenario: The Life of a Transaction
@@ -78,16 +87,21 @@ To see the system's robustness, consider this flow:
 
 ---
 
-## 🗺️ Project Roadmap
-- [x] **Phase 1-4:** Core Engine, Multi-tenancy, Outbox, Redis Locking, and PDF Reporting.
 - [ ] **Phase 5: Automated Quality Assurance**
-    - Unit Tests for invariants & Integration Tests with **TestContainers**.
+    - [x] **Unit Testing:** 100% coverage of core accounting invariants using **xUnit** and **FluentAssertions**.
+    - [x] **Architecture Testing:** Automated enforcement of Clean Architecture (Onion) boundaries and naming conventions using **NetArchTest**.
+    - [ ] **Integration Testing:** End-to-End verification of Multi-tenancy and persistence logic using **TestContainers** (PostgreSQL/Redis in Docker).
 - [ ] **Phase 6: Advanced Identity & RBAC**
     - Multi-tenant Role-Based Access Control (Admin, Accountant, Auditor).
+- [ ] **Phase 7: Observability & Resilience**
+    - Distributed Tracing with **OpenTelemetry** and advanced Circuit Breakers.
 
-## 🛠️ Tech Stack
+
+## 🛠️ Tech Stack 
+
 - **Framework:** .NET 9 (C# 13), MediatR, FluentValidation, Serilog.
-- **Data:** PostgreSQL 16 (Schema Isolation), EF Core 9, Dapper, Redis.
+- **Testing:** xUnit, FluentAssertions, **NetArchTest**, NSubstitute.
+- **Data:** PostgreSQL 16 (Schema Isolation), EF Core 9, Dapper, Redis (RedLock).
 - **DevOps:** Docker Compose, QuestPDF, Health Checks.
 
 ---

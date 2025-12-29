@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+<ItemGroup>
+  <!-- Correct Package Name: eNhancedEdition -->
+  <PackageReference Include="NetArchTest.eNhancedEdition" Version="1.4.5" />
+  <PackageReference Include="FluentAssertions" Version="8.0.1" />
+  <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+  <PackageReference Include="xunit" Version="2.9.2" />
+  <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+</ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\Ledger\FinLedger.Modules.Ledger.Domain\FinLedger.Modules.Ledger.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Ledger\FinLedger.Modules.Ledger.Application\FinLedger.Modules.Ledger.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Ledger\FinLedger.Modules.Ledger.Infrastructure\FinLedger.Modules.Ledger.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Ledger\FinLedger.Modules.Ledger.Api\FinLedger.Modules.Ledger.Api.csproj" />
+  </ItemGroup>
+</Project>
