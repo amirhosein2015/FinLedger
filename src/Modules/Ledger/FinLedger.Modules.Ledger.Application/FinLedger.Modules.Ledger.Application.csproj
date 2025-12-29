@@ -19,4 +19,13 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+
+  <ItemGroup>
+  <!-- Allow the unit test project to see internal classes for testing purposes -->
+  <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+    <_Parameter1>FinLedger.Modules.Ledger.Tests.Unit</_Parameter1>
+  </AssemblyAttribute>
+</ItemGroup>
+
+
 </Project>

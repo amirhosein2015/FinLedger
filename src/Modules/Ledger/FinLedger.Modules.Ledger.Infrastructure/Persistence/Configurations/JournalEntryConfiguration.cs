@@ -22,7 +22,7 @@ internal class JournalEntryConfiguration : IEntityTypeConfiguration<JournalEntry
             line.ToTable("JournalEntryLines");
             line.HasKey(x => x.Id);
             
-            // Principal Signal: Tell EF Core that we generate Guids in C#, NOT the Database
+            //  Tell EF Core that we generate Guids in C#, NOT the Database
             line.Property(x => x.Id).ValueGeneratedNever(); 
             
             line.WithOwner().HasForeignKey(x => x.JournalEntryId);
