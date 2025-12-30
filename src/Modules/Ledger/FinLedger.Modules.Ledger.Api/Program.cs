@@ -19,10 +19,10 @@ using Serilog.Events;
 using Serilog.Formatting.Compact;
 using QuestPDF.Infrastructure;
 
-// 1. Setup QuestPDF License (Community Edition)
+// Setup QuestPDF License (Community Edition)
 QuestPDF.Settings.License = LicenseType.Community;
 
-// 2. Configure Serilog for Structured Logging
+// Configure Serilog for Structured Logging
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
@@ -130,3 +130,7 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+
+// This makes the Program class visible to Integration Test projects
+public partial class Program { }
