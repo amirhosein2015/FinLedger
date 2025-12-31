@@ -24,9 +24,18 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
 using QuestPDF.Infrastructure;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
+
+// Setting the AppContext switch BEFORE any other executable code
+// to ensure PostgreSQL handles DateTime UTC conversions correctly.
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
+// Setup QuestPDF
 QuestPDF.Settings.License = LicenseType.Community;
 
+// Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
@@ -35,12 +44,30 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-    Log.Information("Starting FinLedger Enterprise API...");
+    Log.Information("Starting FinLedger Enterprise API with Observability...");
     var builder = WebApplication.CreateBuilder(args);
     builder.Host.UseSerilog();
 
+    // --- 1. Identity Module ---
     builder.Services.AddIdentityModule(builder.Configuration);
 
+    // --- 2. OpenTelemetry Configuration (Phase 7) ---
+    builder.Services.AddOpenTelemetry()
+        .WithTracing(tracing => 
+        {
+            tracing
+                .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("FinLedger.API"))
+                .AddAspNetCoreInstrumentation()
+                .AddEntityFrameworkCoreInstrumentation() // Trace Database Queries
+                .AddRedisInstrumentation() // Trace Redis Operations
+                .AddSource("MediatR") // Custom source for pipeline tracing
+                .AddOtlpExporter(opt => 
+                {
+                    opt.Endpoint = new Uri("http://localhost:4317");
+                });
+        });
+
+    // --- 3. Security & Authorization ---
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
@@ -64,6 +91,7 @@ try
         options.AddPolicy("AccountantAccess", policy => policy.Requirements.Add(new TenantRoleRequirement("Accountant")));
     });
 
+    // --- 4. API & Controllers ---
     builder.Services.AddApiVersioning(options =>
     {
         options.DefaultApiVersion = new ApiVersion(1, 0);
@@ -76,7 +104,6 @@ try
         options.SubstituteApiVersionInUrl = true;
     });
 
-    // Added ApplicationPart to discover Identity Controllers
     builder.Services.AddControllers()
         .AddApplicationPart(typeof(FinLedger.Modules.Identity.Api.Controllers.UsersController).Assembly);
 
@@ -105,6 +132,7 @@ try
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
 
+    // --- 5. MediatR & Persistence ---
     builder.Services.AddMediatR(cfg => 
     {
         cfg.RegisterServicesFromAssemblies(
@@ -137,6 +165,7 @@ try
 
     var app = builder.Build();
 
+    // --- 6. Middlewares ---
     app.UseSerilogRequestLogging();
     app.UseExceptionHandler();
 

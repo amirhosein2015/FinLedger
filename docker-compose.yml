@@ -36,3 +36,13 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+
+        # 4. Distributed Tracing (Jaeger)
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: finledger_jaeger
+    restart: always
+    ports:
+      - "16686:16686" # UI Dashboard
+      - "4317:4317"   # OTLP gRPC (OpenTelemetry Port)
+

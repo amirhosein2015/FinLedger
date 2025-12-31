@@ -86,23 +86,25 @@ public class LedgerDbContext : DbContext, ILedgerDbContext
         if (string.IsNullOrWhiteSpace(schemaName) || schemaName == "public") return;
         
         var cleanSchema = schemaName.ToLower().Trim();
-
-        //Using ExecuteSqlInterpolatedAsync to satisfy EF Core 9 security analyzers (EF1002)
-        // and prevent SQL Injection while creating dynamic schemas.
         await Database.ExecuteSqlInterpolatedAsync($"CREATE SCHEMA IF NOT EXISTS \"{cleanSchema}\";");
 
         var databaseCreator = Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator;
         if (databaseCreator != null)
         {
-            try 
-            { 
-     
-                await databaseCreator.CreateTablesAsync(); 
-            } 
-            catch 
-            { 
-                // Swallow exceptions if tables already exist
+            // Check if tables exist BEFORE trying to create them.
+            // This keeps our Observability (Jaeger) dashboard clean and green (removes 42P07 error).
+            if (!await databaseCreator.HasTablesAsync())
+            {
+                try 
+                { 
+                    await databaseCreator.CreateTablesAsync(); 
+                } 
+                catch 
+                { 
+                    // Silent fail if another instance created tables meanwhile
+                }
             }
         }
     }
-}
+} // End of Class
+
