@@ -93,6 +93,17 @@ FinLedger is guarded by a triple-layer testing suite to ensure financial accurac
 - **Performance Diagnostics:** Integrated with **Jaeger** to visualize execution spans, allowing for instant identification of slow SQL queries or distributed lock contentions.
 - **Deep Instrumentation:** Automatic monitoring of **PostgreSQL** execution and **Redis** commands, providing a "glass-box" view of system behavior without manual code pollution.
 
+#### 📊 Distributed Tracing in Action (Live Demo)
+The following trace demonstrates the full request lifecycle. It captures the correlation between the incoming API call, the MediatR pipeline execution, and the final optimized SQL query execution within the specific tenant's schema.
+
+![FinLedger Jaeger Trace](./docs/screenshots/jaeger-trace-lifecycle.png)
+
+> **Principal Insight:** This level of observability ensures that we can identify performance bottlenecks at the database layer and verify that our **Schema-per-Tenant** isolation is working correctly in real-time.
+
+**Strategic Technical Signals:**
+- **Zero-Guesswork Performance:** Every span provides sub-millisecond precision on execution time across the API, MediatR pipelines, and PostgreSQL layers.
+- **Tenant Isolation Proof:** The trace confirms that the SQL instrumentation correctly executes within the dynamically resolved tenant schema (e.g., `berlin_hq`), validating physical data isolation.
+- **Maintenance Scalability:** By using **OpenTelemetry**, the system is "Cloud-Agnostic" and ready for enterprise monitoring tools like Prometheus, Elastic, or New Relic without changing a single line of business logic.
 
 ---
 
