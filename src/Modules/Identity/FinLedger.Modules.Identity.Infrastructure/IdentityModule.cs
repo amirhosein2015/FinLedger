@@ -15,13 +15,12 @@ public static class IdentityModule
         services.AddDbContext<IdentityDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
+        // Map the interface to the concrete implementation
+        services.AddScoped<IIdentityDbContext>(sp => sp.GetRequiredService<IdentityDbContext>());
+
         // 2. Security Services
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtProvider, JwtProvider>();
-
-        // 3. MediatR (Registering handlers from this assembly)
-        services.AddMediatR(cfg => 
-            cfg.RegisterServicesFromAssembly(typeof(IdentityModule).Assembly));
 
         return services;
     }

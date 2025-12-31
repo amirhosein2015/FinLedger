@@ -81,6 +81,13 @@ FinLedger is guarded by a triple-layer testing suite to ensure financial accurac
 - **Application Logic Verification:** Mocking external concerns with **NSubstitute** to verify command handlers, concurrency locks, and reliable messaging (Outbox).
 
 
+### 🔐 Identity & Multi-tenant Security 
+- **Modular Identity Architecture:** A fully decoupled Identity module designed following Modular Monolith principles, ensuring high cohesion and enabling future microservices extraction.
+- **SaaS-Aware JWT Security:** Implements a custom JWT provider that embeds tenant-specific roles and claims into security tokens, allowing for sub-millisecond authorization without redundant database roundtrips.
+- **Policy-Based RBAC:** Fine-grained access control using custom `IAuthorizationRequirement` and `AuthorizationHandler`. The system dynamically verifies if a user has the appropriate role (Admin, Accountant, Auditor) within the specific context of the requested Tenant ID.
+- **Secure-by-Design Persistence:** Enforces industry-standard **BCrypt** hashing for password security and maintains a dedicated shared schema for global identity to allow seamless cross-tenant authentication.
+
+
 ---
 
 ## 🕹️ End-to-End Scenario: The Life of a Transaction
@@ -101,22 +108,74 @@ To see the system's robustness, consider this flow:
     - [x] **Unit Testing:** 100% coverage of core accounting invariants using **xUnit** and **FluentAssertions**.
     - [x] **Architecture Testing:** Automated enforcement of Clean Architecture (Onion) boundaries using **NetArchTest**.
     - [x] **Integration Testing:** Real-world verification of Schema-per-tenant logic using **TestContainers** (PostgreSQL 16 in Docker).
-- [ ] **Phase 6: Advanced Identity & RBAC**
-    - Multi-tenant Role-Based Access Control (Admin, Accountant, Auditor).
+- [x] **Phase 6: Advanced Identity & RBAC **
+    - [x] **Modular Identity:** Decoupled Identity module following Modular Monolith principles.
+    - [x] **Multi-tenant JWT:** Custom security tokens carrying tenant-specific roles and claims.
+    - [x] **Dynamic RBAC:** Policy-based authorization with custom handlers to enforce cross-tenant data boundaries.
+    - [x] **Secure Persistence:** BCrypt password hashing and dedicated global identity schema.
 - [ ] **Phase 7: Cloud-Native Observability**
-    - Distributed Tracing with **OpenTelemetry** and Advanced Health Monitoring.
+    - Distributed Tracing with **OpenTelemetry**, Jaeger, and Advanced Health Monitoring.
+---
 
 
+```markdown
+## 🕹️ Getting Started: The Developer Journey
 
-## 🛠️ Tech Stack 
+Follow these steps to explore the system's full multi-tenant security and financial integrity flow.
 
-- **Framework:** .NET 9 (C# 13), MediatR, FluentValidation, Serilog.
-- **Testing:** xUnit, FluentAssertions, **NetArchTest**, NSubstitute.
-- **Data:** PostgreSQL 16 (Schema Isolation), EF Core 9, Dapper, Redis (RedLock).
-- **DevOps:** Docker Compose, QuestPDF, Health Checks.
+### 🛠️ 1. Prerequisites & Infrastructure
+Ensure you have **Docker Desktop** and **.NET 9 SDK** installed.
+```powershell
+# Start PostgreSQL, Redis, and RabbitMQ
+docker-compose up -d
+```
+
+### 🚀 2. Run the Application
+Execute the Host API project:
+```powershell
+dotnet run --project src/Modules/Ledger/FinLedger.Modules.Ledger.Api/FinLedger.Modules.Ledger.Api.csproj
+```
+> **Swagger UI:** [http://localhost:5000/swagger](http://localhost:5000/swagger)
 
 ---
-**Status:** 🏆 *Production-Grade Ledger Engine Operational.*
+
+### 🛡️ 3. The End-to-End Testing Flow (Step-by-Step)
+
+To verify the **Multi-tenant RBAC** and **Ledger Isolation**, follow this sequence in Swagger:
+
+| Step | Action | Endpoint | Key Note |
+| :--- | :--- | :--- | :--- |
+| **1** | **Register** | `POST /identity/Users/register` | Creates a global user identity. |
+| **2** | **Assign Role** | `POST /identity/Users/assign-role` | Connects user to a `tenant_id` (e.g., `berlin_hq`) with a role (1=Admin). |
+| **3** | **Login** | `POST /identity/Users/login` | Returns a **JWT Token** containing tenant-specific claims. |
+| **4** | **Authorize** | Click **Authorize** button | Paste the token (Swagger automatically adds the 'Bearer' prefix). |
+| **5** | **Ledger Action**| `POST /ledger/Entries` | Set Header `X-Tenant-Id: berlin_hq`. System verifies role inside the token for this specific tenant. |
+
+---
+
+### 🧪 4. Running the Test Suite
+FinLedger uses a triple-layer testing strategy. You can run all tests via CLI:
+```powershell
+# Runs Unit, Architecture, and Integration Tests (TestContainers)
+dotnet test
+```
+- **Integration Tests:** Automatically spin up ephemeral Docker containers for a clean-room verification of the database logic.
+- **Architecture Tests:** Enforce Clean Architecture boundaries and naming conventions automatically.
+```
+
+---
+
+
+## 🛠️ Tech Stack
+
+- **Framework:** .NET 9 (C# 13), MediatR, FluentValidation, Serilog.
+- **Security & Identity:** JWT Bearer Authentication, Custom Policy-based RBAC, BCrypt.Net (Password Hashing).
+- **Testing Suite:** xUnit, FluentAssertions, NetArchTest, NSubstitute, **TestContainers (PostgreSQL & Redis)**.
+- **Data Persistence:** PostgreSQL 16 (Schema-per-Tenant), EF Core 9, Dapper (High-perf Read Model), Redis (Distributed Locking).
+- **Infrastructure & Tools:** Docker Compose, QuestPDF (Professional Reporting), ASP.NET Core Health Checks.
+
+---
+**Status:**  *Production-Grade Ledger Engine Operational.*
 ```
 
 ---
