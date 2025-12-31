@@ -88,33 +88,44 @@ FinLedger is guarded by a triple-layer testing suite to ensure financial accurac
 - **Secure-by-Design Persistence:** Enforces industry-standard **BCrypt** hashing for password security and maintains a dedicated shared schema for global identity to allow seamless cross-tenant authentication.
 
 
+### 🕵️ Cloud-Native Observability 
+- **Distributed Tracing:** Implements full request lifecycle tracking using **OpenTelemetry (OTEL)**. Every request is traced as it travels from the API through MediatR pipelines and down to the database.
+- **Performance Diagnostics:** Integrated with **Jaeger** to visualize execution spans, allowing for instant identification of slow SQL queries or distributed lock contentions.
+- **Deep Instrumentation:** Automatic monitoring of **PostgreSQL** execution and **Redis** commands, providing a "glass-box" view of system behavior without manual code pollution.
+
+
 ---
 
 ## 🕹️ End-to-End Scenario: The Life of a Transaction
+
 To see the system's robustness, consider this flow:
+
 1. **Request:** A Tenant initiates a transfer via the Versioned API.
 2. **Concurrency:** A **Redis Lock** is acquired to ensure serialized access to specific accounts.
 3. **Validation:** The **MediatR Pipeline** triggers **FluentValidation** followed by Domain-level invariant checks.
 4. **Persistence:** The Ledger record and an **Outbox Message** are saved in a single **ACID Transaction**.
 5. **Reliability:** The **Background Worker** ensures the event is published even if the primary API process crashes.
 6. **Insight:** The **Reporting Engine** extracts data from the isolated schema to produce a professional PDF report.
+7. **Observability:** Every step above is captured as a correlated **Trace** in Jaeger, providing 100% transparency into the transaction's performance.
+
 
 ---
 
+
 ## 🗺️ Project Roadmap
 
-- [x] **Phase 1-4:** Core Engine, Multi-tenant Isolation, Outbox Pattern, Redis Distributed Locking, and Professional PDF Reporting.
+- [x] **Phase 1-4:** Core Engine, Multi-tenant Isolation, Outbox Pattern, Redis Locking, and PDF Reporting.
 - [x] **Phase 5: Automated Quality Assurance**
-    - [x] **Unit Testing:** 100% coverage of core accounting invariants using **xUnit** and **FluentAssertions**.
-    - [x] **Architecture Testing:** Automated enforcement of Clean Architecture (Onion) boundaries using **NetArchTest**.
-    - [x] **Integration Testing:** Real-world verification of Schema-per-tenant logic using **TestContainers** (PostgreSQL 16 in Docker).
-- [x] **Phase 6: Advanced Identity & RBAC **
-    - [x] **Modular Identity:** Decoupled Identity module following Modular Monolith principles.
-    - [x] **Multi-tenant JWT:** Custom security tokens carrying tenant-specific roles and claims.
-    - [x] **Dynamic RBAC:** Policy-based authorization with custom handlers to enforce cross-tenant data boundaries.
-    - [x] **Secure Persistence:** BCrypt password hashing and dedicated global identity schema.
-- [ ] **Phase 7: Cloud-Native Observability**
-    - Distributed Tracing with **OpenTelemetry**, Jaeger, and Advanced Health Monitoring.
+    - [x] Unit Testing (xUnit), Architecture Testing (NetArchTest), and Integration Testing (**TestContainers**).
+- [x] **Phase 6: Advanced Identity & RBAC**
+    - [x] Multi-tenant JWT, Policy-based Authorization, and **BCrypt** security.
+- [x] **Phase 7: Cloud-Native Observability (Completed 🏆)**
+    - [x] **OpenTelemetry** integration with **Jaeger** for distributed tracing and performance monitoring.
+- [ ] **Phase 8: Financial Compliance & Auditing**
+    - Implementation of Immutable Audit Logs (Who/When/What) and Fiscal Year-End closing logic.
+- [ ] **Phase 9: Enterprise Deployment & CI/CD (Final Frontier)**
+    - Automated pipelines with **GitHub Actions**, Docker Registry integration, and Kubernetes (K8s) manifests.
+
 ---
 
 
