@@ -118,7 +118,7 @@ To see the system's robustness, consider this flow:
 ---
 
 
-```markdown
+
 ## 🕹️ Getting Started: The Developer Journey
 
 Follow these steps to explore the system's full multi-tenant security and financial integrity flow.
@@ -161,7 +161,7 @@ dotnet test
 ```
 - **Integration Tests:** Automatically spin up ephemeral Docker containers for a clean-room verification of the database logic.
 - **Architecture Tests:** Enforce Clean Architecture boundaries and naming conventions automatically.
-```
+
 
 ---
 
