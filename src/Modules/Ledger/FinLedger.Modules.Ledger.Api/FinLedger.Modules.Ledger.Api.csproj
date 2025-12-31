@@ -1,37 +1,47 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\FinLedger.Modules.Ledger.Application\FinLedger.Modules.Ledger.Application.csproj" />
     <ProjectReference Include="..\FinLedger.Modules.Ledger.Infrastructure\FinLedger.Modules.Ledger.Infrastructure.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\FinLedger.BuildingBlocks.Application\FinLedger.BuildingBlocks.Application.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\FinLedger.BuildingBlocks.Infrastructure\FinLedger.BuildingBlocks.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Identity\FinLedger.Modules.Identity.Infrastructure\FinLedger.Modules.Identity.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Security & Authentication -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
+    
+    <!-- API Versioning -->
     <PackageReference Include="Asp.Versioning.Http" Version="8.1.0" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
+    
+    <!-- Infrastructure & Resilience -->
     <PackageReference Include="AspNetCore.HealthChecks.Npgsql" Version="9.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.Redis" Version="9.0.0" />
-    <PackageReference Include="MediatR" Version="14.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="9.0.0" />
+    
+    <!-- Logging & Performance -->
+    <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    
+    <!-- Core Framework -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.1" />
-    <PackageReference Include="QuestPDF" Version="2025.12.1" />
-    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
-    <PackageReference Include="Serilog.Formatting.Compact" Version="3.0.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+    <PackageReference Include="QuestPDF" Version="2024.12.1" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-<InvariantGlobalization>false</InvariantGlobalization>
-
-  </PropertyGroup>
 
 </Project>
