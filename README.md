@@ -138,14 +138,14 @@ To see the system's robustness, consider this flow:
     - [x] Unit Testing (xUnit), Architecture Testing (NetArchTest), and Integration Testing (**TestContainers**).
 - [x] **Phase 6: Advanced Identity & RBAC**
     - [x] Multi-tenant JWT, Policy-based Authorization, and **BCrypt** security.
-- [x] **Phase 7: Cloud-Native Observability (Completed 🏆)**
+- [x] **Phase 7: Cloud-Native Observability **
     - [x] **OpenTelemetry** integration with **Jaeger** for distributed tracing and performance monitoring.
-- [x] **Phase 8: Financial Compliance & Auditing (Completed 🏆)**
+- [x] **Phase 8: Financial Compliance & Auditing **
     - [x] **Automated Audit Trail:** System-wide tracking of "Who, When, and What" for every database change.
     - [x] **User Attribution:** Seamless integration between JWT Identity and persistence layer via `ICurrentUserProvider`.
     - [x] **Data Integrity:** Physical schema-level auditing to satisfy European financial regulations.
-- [ ] **Phase 9: Enterprise Deployment & CI/CD**
-    - Automated pipelines with GitHub Actions and Docker Registry.
+- [x] **Phase 9: Enterprise Deployment & CI/CD **
+    - [x] Automated GitHub Actions pipeline for Cloud-based Build & Test
 
 ---
 
@@ -157,6 +157,14 @@ FinLedger ensures 100% accountability through an automated auditing engine:
 - **Correlated Identity:** Every audit entry automatically captures the Global User ID from the JWT context via a decoupled `ICurrentUserProvider`.
 - **Forensic Transparency:** Entity states are serialized into high-performance **PostgreSQL JSONB** columns, providing a complete "Before/After" history for regulatory compliance.
 - **Physical Data Isolation:** Audit logs are stored within each tenant's private schema, satisfying strict **GDPR and SOC2** data residency requirements.
+
+### 🤖 Enterprise CI/CD Pipeline (Phase 9)
+FinLedger is production-ready with a fully automated delivery pipeline:
+- **Continuous Integration:** Every commit is automatically verified via **GitHub Actions** on a Linux environment.
+- **Infrastructure-as-Code Testing:** Integration tests utilize **TestContainers** to dynamically spin up PostgreSQL and Redis within the CI runner, ensuring zero environmental drift.
+- **Quality Gates:** Enforces strict build and test success criteria before allowing code merges, maintaining the integrity of the Modular Monolith.
+
+
 
 ---
 
@@ -221,7 +229,7 @@ dotnet test
 - **Testing:** xUnit, FluentAssertions, NetArchTest, NSubstitute, **TestContainers**.
 - **Data:** PostgreSQL 16 (Schema-per-Tenant), EF Core 9, Dapper, Redis (RedLock).
 - **Infrastructure:** Docker Compose, QuestPDF, Health Checks.
-
+- **CI/CD & DevOps:** **GitHub Actions**, Docker Compose, **TestContainers**.
 ---
 
 **Status:** 🏆 *Enterprise-Grade, Secure & Observable Ledger Engine Operational.*
