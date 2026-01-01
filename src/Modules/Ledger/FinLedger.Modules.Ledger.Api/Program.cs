@@ -27,8 +27,7 @@ using QuestPDF.Infrastructure;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-// Setting the AppContext switch BEFORE any other executable code
-// to ensure PostgreSQL handles DateTime UTC conversions correctly.
+// 1. Ensure PostgreSQL UTC compatibility at the very beginning
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 // Setup QuestPDF
@@ -47,7 +46,7 @@ try
     var builder = WebApplication.CreateBuilder(args);
     builder.Host.UseSerilog();
 
-    // --- 1. Identity Module ---
+    // --- 1. Identity Module Configuration ---
     builder.Services.AddIdentityModule(builder.Configuration);
 
     // --- 2. OpenTelemetry Configuration (Phase 7) ---
@@ -113,7 +112,7 @@ try
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
             In = ParameterLocation.Header,
-            Description = "Enter: Bearer {token}",
+            Description = "Enter JWT Token",
             Name = "Authorization",
             Type = SecuritySchemeType.Http,
             BearerFormat = "JWT",
@@ -146,33 +145,31 @@ try
         typeof(FinLedger.Modules.Identity.Application.Abstractions.IIdentityDbContext).Assembly 
     });
 
-    // Suppressing the strict EF Core 9 migration warning for Multi-tenant environments
     builder.Services.AddDbContext<LedgerDbContext>((sp, opt) =>
     {
         opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
         opt.ReplaceService<IModelCacheKeyFactory, TenantModelCacheKeyFactory>();
-        
-       
         opt.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
     });
-
     builder.Services.AddScoped<ILedgerDbContext>(p => p.GetRequiredService<LedgerDbContext>());
 
+    // --- 6. Infrastructure & Resilience ---
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ITenantProvider, HttpHeaderTenantProvider>();
-    builder.Services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect("localhost:16379")); 
-    builder.Services.AddSingleton<IDistributedLock, RedisDistributedLock>();
-
-    // Registering CurrentUserProvider to track identity in audit logs
     builder.Services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
+
+    // Using Configuration for Redis to support dynamic environments (Docker/CI)
+    var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:16379";
+    builder.Services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(redisConnectionString)); 
+    builder.Services.AddSingleton<IDistributedLock, RedisDistributedLock>();
 
     builder.Services.AddHealthChecks()
         .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!)
-        .AddRedis("localhost:16379");
+        .AddRedis(redisConnectionString);
 
     var app = builder.Build();
 
-    // --- 6. Middlewares ---
+    // --- 7. Middleware Pipeline ---
     app.UseSerilogRequestLogging();
     app.UseExceptionHandler();
 
@@ -199,7 +196,7 @@ try
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Application terminated unexpectedly");
+    Log.Fatal(ex, "Host terminated unexpectedly");
 }
 finally
 {
