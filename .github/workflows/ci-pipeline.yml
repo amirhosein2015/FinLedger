@@ -10,21 +10,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    services:
-      # Spinning up real infrastructure for CI tests
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: admin
-          POSTGRES_PASSWORD: SecurePassword123!
-          POSTGRES_DB: finledger_core
-        ports:
-          - 15432:5432
-      redis:
-        image: redis:alpine
-        ports:
-          - 16379:6379
-
     steps:
     - uses: actions/checkout@v4
 
@@ -39,5 +24,7 @@ jobs:
     - name: Build Solution
       run: dotnet build --no-restore --configuration Release
 
-    - name: Run Tests (Unit, Architecture, Integration)
+    # TestContainers will automatically talk to the 
+    # Docker daemon available on the Ubuntu runner. No manual services needed.
+    - name: Run All Tests (Unit, Architecture, Integration)
       run: dotnet test --no-build --configuration Release --verbosity normal
