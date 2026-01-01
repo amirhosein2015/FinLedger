@@ -27,13 +27,11 @@ using QuestPDF.Infrastructure;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-// 1. Ensure PostgreSQL UTC compatibility at the very beginning
+// 1. Ensure PostgreSQL UTC compatibility
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
-// Setup QuestPDF
 QuestPDF.Settings.License = LicenseType.Community;
 
-// Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
@@ -42,14 +40,13 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-    Log.Information("Starting FinLedger Enterprise API with Observability...");
+    Log.Information("Starting FinLedger Enterprise API...");
     var builder = WebApplication.CreateBuilder(args);
     builder.Host.UseSerilog();
 
-    // --- 1. Identity Module Configuration ---
     builder.Services.AddIdentityModule(builder.Configuration);
 
-    // --- 2. OpenTelemetry Configuration (Phase 7) ---
+    // --- 2. OpenTelemetry & Tracing ---
     builder.Services.AddOpenTelemetry()
         .WithTracing(tracing => 
         {
@@ -59,10 +56,7 @@ try
                 .AddEntityFrameworkCoreInstrumentation() 
                 .AddRedisInstrumentation() 
                 .AddSource("MediatR") 
-                .AddOtlpExporter(opt => 
-                {
-                    opt.Endpoint = new Uri("http://localhost:4317");
-                });
+                .AddOtlpExporter(opt => { opt.Endpoint = new Uri("http://localhost:4317"); });
         });
 
     // --- 3. Security & Authorization ---
@@ -77,8 +71,7 @@ try
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = builder.Configuration["Jwt:Issuer"],
                 ValidAudience = builder.Configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]!))
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]!))
             };
         });
 
@@ -89,7 +82,7 @@ try
         options.AddPolicy("AccountantAccess", policy => policy.Requirements.Add(new TenantRoleRequirement("Accountant")));
     });
 
-    // --- 4. API & Controllers ---
+    // --- 4. API Configuration ---
     builder.Services.AddApiVersioning(options =>
     {
         options.DefaultApiVersion = new ApiVersion(1, 0);
@@ -109,22 +102,8 @@ try
     {
         options.OperationFilter<TenantHeaderFilter>();
         options.SwaggerDoc("v1", new OpenApiInfo { Title = "FinLedger API", Version = "v1" });
-        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-        {
-            In = ParameterLocation.Header,
-            Description = "Enter JWT Token",
-            Name = "Authorization",
-            Type = SecuritySchemeType.Http,
-            BearerFormat = "JWT",
-            Scheme = "bearer"
-        });
-        options.AddSecurityRequirement(new OpenApiSecurityRequirement
-        {
-            {
-                new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } },
-                Array.Empty<string>()
-            }
-        });
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme { In = ParameterLocation.Header, Type = SecuritySchemeType.Http, BearerFormat = "JWT", Scheme = "bearer" });
+        options.AddSecurityRequirement(new OpenApiSecurityRequirement { { new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } }, Array.Empty<string>() } });
     });
 
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -133,17 +112,11 @@ try
     // --- 5. MediatR & Persistence ---
     builder.Services.AddMediatR(cfg => 
     {
-        cfg.RegisterServicesFromAssemblies(
-            typeof(ILedgerDbContext).Assembly,
-            typeof(FinLedger.Modules.Identity.Application.Abstractions.IIdentityDbContext).Assembly
-        );
+        cfg.RegisterServicesFromAssemblies(typeof(ILedgerDbContext).Assembly, typeof(FinLedger.Modules.Identity.Application.Abstractions.IIdentityDbContext).Assembly);
         cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
     });
 
-    builder.Services.AddValidatorsFromAssemblies(new[] { 
-        typeof(ILedgerDbContext).Assembly,
-        typeof(FinLedger.Modules.Identity.Application.Abstractions.IIdentityDbContext).Assembly 
-    });
+    builder.Services.AddValidatorsFromAssemblies(new[] { typeof(ILedgerDbContext).Assembly, typeof(FinLedger.Modules.Identity.Application.Abstractions.IIdentityDbContext).Assembly });
 
     builder.Services.AddDbContext<LedgerDbContext>((sp, opt) =>
     {
@@ -153,23 +126,30 @@ try
     });
     builder.Services.AddScoped<ILedgerDbContext>(p => p.GetRequiredService<LedgerDbContext>());
 
-    // --- 6. Infrastructure & Resilience ---
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ITenantProvider, HttpHeaderTenantProvider>();
     builder.Services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
 
-    // Using Configuration for Redis to support dynamic environments (Docker/CI)
-    var redisConnectionString = builder.Configuration.GetConnectionString("Redis") ?? "localhost:16379";
-    builder.Services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(redisConnectionString)); 
+    // --- 6. Resilience: Dynamic Redis Configuration (FIXED FOR CI) ---
+    var redisUrl = builder.Configuration.GetConnectionString("Redis") ?? "localhost:16379";
+    
+    // Non-blocking connection options for Cloud/CI environments
+    var redisOptions = ConfigurationOptions.Parse(redisUrl);
+    redisOptions.AbortOnConnectFail = false; // Essential: Don't crash if Redis is slow to start
+    redisOptions.ConnectRetry = 5;
+    redisOptions.ConnectTimeout = 10000;
+
+    var multiplexer = ConnectionMultiplexer.Connect(redisOptions);
+    builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
     builder.Services.AddSingleton<IDistributedLock, RedisDistributedLock>();
 
     builder.Services.AddHealthChecks()
         .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!)
-        .AddRedis(redisConnectionString);
+        .AddRedis(redisUrl);
 
     var app = builder.Build();
 
-    // --- 7. Middleware Pipeline ---
+    // --- 7. Pipeline ---
     app.UseSerilogRequestLogging();
     app.UseExceptionHandler();
 
@@ -180,10 +160,7 @@ try
         {
             var descriptions = app.DescribeApiVersions();
             foreach (var description in descriptions)
-            {
-                var url = $"/swagger/{description.GroupName}/swagger.json";
-                options.SwaggerEndpoint(url, description.GroupName.ToUpperInvariant());
-            }
+                options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
         });
     }
 
@@ -196,7 +173,7 @@ try
 }
 catch (Exception ex)
 {
-    Log.Fatal(ex, "Host terminated unexpectedly");
+    Log.Fatal(ex, "Application terminated unexpectedly");
 }
 finally
 {

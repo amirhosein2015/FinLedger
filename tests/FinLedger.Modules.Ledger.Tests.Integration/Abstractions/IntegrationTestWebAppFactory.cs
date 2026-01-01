@@ -27,11 +27,12 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
     {
         builder.ConfigureAppConfiguration((context, configBuilder) =>
         {
-            // Injecting DYNAMIC container connection strings into the app config
+            // Dynamically overriding connection strings for the entire Host.
+            // We add 'abortConnect=false' to Redis to ensure the host doesn't crash during OTEL initialization.
             configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:DefaultConnection"] = _dbContainer.GetConnectionString(),
-                ["ConnectionStrings:Redis"] = _redisContainer.GetConnectionString(),
+                ["ConnectionStrings:Redis"] = _redisContainer.GetConnectionString() + ",abortConnect=false",
                 ["Jwt:Secret"] = "CI_Test_Secret_Key_At_Least_32_Chars_Long!!",
                 ["Jwt:Issuer"] = "FinLedger",
                 ["Jwt:Audience"] = "FinLedgerUsers"
@@ -40,17 +41,17 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
         builder.ConfigureTestServices(services =>
         {
-            // 1. Ensure IdentityDbContext uses the TestContainer
+            // 1. Remove and Re-register IdentityDbContext to use the TestContainer
             var identityDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<IdentityDbContext>));
             if (identityDescriptor != null) services.Remove(identityDescriptor);
             services.AddDbContext<IdentityDbContext>(options => options.UseNpgsql(_dbContainer.GetConnectionString()));
 
-            // 2. Ensure LedgerDbContext uses the TestContainer
+            // 2. Remove and Re-register LedgerDbContext to use the TestContainer
             var ledgerDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<LedgerDbContext>));
             if (ledgerDescriptor != null) services.Remove(ledgerDescriptor);
             services.AddDbContext<LedgerDbContext>(options => options.UseNpgsql(_dbContainer.GetConnectionString()));
 
-            // 3. Register TestTenantProvider
+            // 3. Fix the Scoped/Singleton conflict by providing a controllable Tenant Provider
             var tenantDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ITenantProvider));
             if (tenantDescriptor != null) services.Remove(tenantDescriptor);
 
@@ -61,13 +62,12 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
     public async Task InitializeAsync()
     {
-        await _dbContainer.StartAsync();
-        await _redisContainer.StartAsync();
+        // Start containers in parallel to speed up CI execution
+        await Task.WhenAll(_dbContainer.StartAsync(), _redisContainer.StartAsync());
     }
 
     public new async Task DisposeAsync()
     {
-        await _dbContainer.StopAsync();
-        await _redisContainer.StopAsync();
+        await Task.WhenAll(_dbContainer.StopAsync(), _redisContainer.StopAsync());
     }
 }
