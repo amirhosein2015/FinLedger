@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: finledger-config
+  namespace: default
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  Jwt__Issuer: "FinLedger"
+  Jwt__Audience: "FinLedgerUsers"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: finledger-secrets
+type: Opaque
+data:
+  # Base64 encoded: FinLedger_Super_Secret_Key_2025_!!
+  jwt-secret: RmluTGVkZ2VyX1N1cGVyX1NlY3JldF9LZXlfMjAyNV8hIQ==

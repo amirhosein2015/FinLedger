@@ -1,0 +1,13 @@
+**/.git
+**/.github
+**/bin
+**/obj
+**/out
+**/.vs
+**/.vscode
+**/.idea
+**/tests
+deploy/
+Dockerfile
+node_modules/
+.dockerignore

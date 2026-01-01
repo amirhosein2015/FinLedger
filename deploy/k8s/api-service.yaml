@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: finledger-api-service
+spec:
+  type: LoadBalancer # Ready for AWS/Azure/GCP Load Balancers
+  selector:
+    app: finledger-api
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080

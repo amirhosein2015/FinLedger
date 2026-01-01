@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finledger-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: finledger-api
+  template:
+    metadata:
+      labels:
+        app: finledger-api
+    spec:
+      containers:
+      - name: api
+        image: amirhosein2015/finledger-api:latest
+        # Tell K8s to use the local image if it exists
+        imagePullPolicy: IfNotPresent 
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: finledger-config
+        env:
+        - name: ConnectionStrings__DefaultConnection
+          value: "Host=postgres-service;Database=finledger_core;Username=admin;Password=SecurePassword123!"
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
