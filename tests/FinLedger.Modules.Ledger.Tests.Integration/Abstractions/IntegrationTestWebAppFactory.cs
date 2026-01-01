@@ -1,10 +1,12 @@
-using FinLedger.BuildingBlocks.Domain; // Added this using
+using FinLedger.BuildingBlocks.Domain;
 using FinLedger.Modules.Ledger.Infrastructure.Persistence;
+using FinLedger.Modules.Identity.Infrastructure.Persistence; // Added for Identity
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration; // Added for Config override
 using Testcontainers.PostgreSql;
 using Testcontainers.Redis;
 using Xunit;
@@ -15,9 +17,6 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 {
     private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
         .WithImage("postgres:16")
-        .WithDatabase("finledger_test")
-        .WithUsername("admin")
-        .WithPassword("SecurePassword123!")
         .Build();
 
     private readonly RedisContainer _redisContainer = new RedisBuilder()
@@ -26,23 +25,32 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        //  Overriding the configuration globally
+        // This ensures BOTH Ledger and Identity modules use the same TestContainer instance
+        builder.ConfigureAppConfiguration((context, configBuilder) =>
+        {
+            configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:DefaultConnection"] = _dbContainer.GetConnectionString(),
+                ["Jwt:Secret"] = "Test_Secret_Key_For_CI_Pipeline_123456789",
+                ["Jwt:Issuer"] = "FinLedger",
+                ["Jwt:Audience"] = "FinLedgerUsers"
+            });
+        });
+
         builder.ConfigureTestServices(services =>
         {
-            // Swap TenantProvider with our Test version
+            // 1. Ensure our TestTenantProvider is registered
             var tenantDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ITenantProvider));
             if (tenantDescriptor != null) services.Remove(tenantDescriptor);
 
             services.AddSingleton<TestTenantProvider>();
             services.AddSingleton<ITenantProvider>(sp => sp.GetRequiredService<TestTenantProvider>());
 
-            // Swap DbContext to use the TestContainer PostgreSQL
-            var dbDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<LedgerDbContext>));
-            if (dbDescriptor != null) services.Remove(dbDescriptor);
-
-            services.AddDbContext<LedgerDbContext>(options =>
-            {
-                options.UseNpgsql(_dbContainer.GetConnectionString());
-            });
+            // 2. Re-register DbContexts to use the new connection string from container
+            // This is a safety measure to ensure EF Core picks up the right driver
+            services.AddDbContext<LedgerDbContext>(options => options.UseNpgsql(_dbContainer.GetConnectionString()));
+            services.AddDbContext<IdentityDbContext>(options => options.UseNpgsql(_dbContainer.GetConnectionString()));
         });
     }
 
