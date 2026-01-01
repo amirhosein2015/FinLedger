@@ -4,39 +4,50 @@
 
 > A high-performance, audit-ready financial ledger system designed for multi-tenant SaaS platforms. Built with **.NET 9**, **PostgreSQL 16**, and **Domain-Driven Design (DDD)**.
 
-![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)
-![Runtime](https://img.shields.io/badge/.NET-9.0-blue)
-![Tests](https://img.shields.io/badge/Tests-11%20Passed-success)
-![Architecture](https://img.shields.io/badge/Architecture-Modular%20Monolith-orange)
-![Multi-tenancy](https://img.shields.io/badge/Multi--tenancy-Schema--per--Tenant-lightgrey)
-![Infrastructure](https://img.shields.io/badge/Infrastructure-Docker%20%26%20TestContainers-blueviolet)
+[![Build Status](https://github.com/amirhosein2015/FinLedger/actions/workflows/ci-pipeline.yml/badge.svg)](https://github.com/amirhosein2015/FinLedger/actions/workflows/ci-pipeline.yml)
+![Runtime](https://img.shields.io/badge/.NET-9.0-blue?logo=dotnet)
+![Tests](https://img.shields.io/badge/Tests-11%20Passed-success?logo=xunit)
+![Architecture](https://img.shields.io/badge/Architecture-Modular%20Monolith-orange?logo=architecture)
+![Observability](https://img.shields.io/badge/Observability-OpenTelemetry%20%26%20Jaeger-yellow?logo=opentelemetry)
+![Orchestration](https://img.shields.io/badge/Orchestration-Kubernetes-blue?logo=kubernetes)
+![Infrastructure](https://img.shields.io/badge/Infrastructure-Docker%20%26%20TestContainers-blueviolet?logo=docker)
+![Frontend](https://img.shields.io/badge/Frontend-React%20%26%20TypeScript-informational?logo=react)
 
 ## 🎯 Problem Statement
 Most modern SaaS applications handle financial data using "Anemic Domain Models", leading to **Data Integrity** issues. In high-stakes FinTech, systems often fail to enforce double-entry invariants or ensure strict tenant isolation. **FinLedger** bridges this gap by combining deep **Accounting Domain expertise** with **Robust Engineering patterns** to provide an immutable, compliant, and highly scalable financial engine.
 
 ---
 
-## 🏗️ Architectural Overview (C4 Model)
-FinLedger follows a **Modular Monolith** architecture to ensure strict domain boundaries while maintaining deployment simplicity and high consistency.
+### 🏗️ Architectural Overview (C4 Model)
 
-### System Context & Container Diagram
+In designing **FinLedger**, my primary goal wasn't to build the most complex system possible, but rather the most **reliable** one. I believe that architecture is a set of conscious trade-offs, and for a financial system, data integrity must always come first.
+
+I opted for a **Modular Monolith** approach. While Microservices are powerful, I felt that at this stage, a Modular Monolith offered the best balance: it provides strict domain boundaries and a clear path to future scalability, while keeping the system easy to reason about, test, and deploy.
+
+#### 📊 System Context & Container Diagram
+The following C4 diagram is a humble attempt to visualize how different components of the ecosystem—from the React dashboard to the PostgreSQL storage—interact to ensure a seamless experience for both tenants and auditors.
+
 ```mermaid
 C4Container
     title Container Diagram for FinLedger SaaS
-
+    
     Person(accountant, "Accountant / CFO", "Manages financial records & reports")
+    
     System_Boundary(c1, "FinLedger Platform") {
-        Container(spa, "Dashboard", "React + TS", "Financial visualization panel")
+        Container(spa, "Dashboard", "React + TS", "A simple, intuitive interface for financial visualization.")
+        
         Container_Boundary(backend, "Core Engine (.NET 9)") {
-            Component(api, "API Gateway", "Versioning & Rate Limiting", "Entry point for all tenants")
-            Component(mod_ledger, "Ledger Core", "Domain Module", "Double-Entry Logic & Invariants")
-            Component(mod_report, "Reporting", "CQRS Read Model", "High-performance analytics")
-            Component(worker, "Outbox Worker", "Background Service", "Event publishing & reliability")
+            Component(api, "API Gateway", "Versioning & Security", "Entry point for all tenants, ensuring secure access.")
+            Component(mod_ledger, "Ledger Core", "Domain Module", "Enforces accounting invariants and double-entry integrity.")
+            Component(mod_report, "Reporting", "CQRS Read Model", "High-performance data projection for sub-second reporting.")
+            Component(worker, "Outbox Worker", "Background Service", "Ensures eventual consistency and reliable event delivery.")
         }
-        ContainerDb(db, "Database", "PostgreSQL 16", "Schema-per-Tenant Strategy")
-        ContainerDb(redis, "Cache & Lock", "Redis", "Distributed Locking (RedLock)")
-        ContainerQueue(bus, "Event Bus", "RabbitMQ", "Integration Events")
+        
+        ContainerDb(db, "Database", "PostgreSQL 16", "Physical data isolation via Schema-per-Tenant strategy.")
+        ContainerDb(redis, "Cache & Lock", "Redis", "Distributed locking to prevent race conditions in concurrent environments.")
+        ContainerQueue(bus, "Event Bus", "RabbitMQ", "Facilitates communication between modules and external systems.")
     }
+
     Rel(accountant, spa, "Uses")
     Rel(spa, api, "API Calls (v1.0)")
     Rel(mod_ledger, db, "ACID Transactions")
@@ -44,13 +55,15 @@ C4Container
     Rel(worker, mod_report, "Materializes Views")
 ```
 
-> **Strategic Note:** We chose a Modular Monolith over Microservices to maintain **Transactional Integrity** and reduce operational complexity while remaining "Microservices-ready". 
-> **[Read more about our Strategic Decisions (ARCHITECTURE.md)](./ARCHITECTURE.md)**
+> **🌿 A Pragmatic Choice:** I chose a Modular Monolith over Microservices to prioritize **Transactional Integrity** and reduce operational overhead during the initial growth phases. However, by enforcing strict boundaries through DDD, the system remains "Microservices-ready" should the business need to scale specific modules independently in the future.
+
+> **📖 Want to dive deeper?** I’ve documented the "Why" behind every major technical decision in our [**ARCHITECTURE.md**](./ARCHITECTURE.md) file. I’m always happy to discuss these trade-offs and learn from different perspectives.
+
 
 ---
 
 
-## 🚀 Core Features & Technical Excellence
+## 🚀 Core Features & Design Philosophy
 
 ### 🏦 Advanced Financial Engine
 - **Immutable Ledger (Zero-Delete Policy):** Implements a high-integrity accounting system where journal entries are finalized (Posted) and cannot be modified or deleted. All corrections are handled through **Automated Reversal Logic**, ensuring a 100% reliable audit trail.
@@ -98,7 +111,7 @@ The following trace demonstrates the full request lifecycle. It captures the cor
 
 ![FinLedger Jaeger Trace](./docs/screenshots/jaeger-trace-lifecycle.png)
 
-> **Principal Insight:** This level of observability ensures that we can identify performance bottlenecks at the database layer and verify that our **Schema-per-Tenant** isolation is working correctly in real-time.
+> ** This level of observability ensures that we can identify performance bottlenecks at the database layer and verify that our **Schema-per-Tenant** isolation is working correctly in real-time.
 
 **Strategic Technical Signals:**
 - **Zero-Guesswork Performance:** Every span provides sub-millisecond precision on execution time across the API, MediatR pipelines, and PostgreSQL layers.
@@ -106,53 +119,6 @@ The following trace demonstrates the full request lifecycle. It captures the cor
 - **Maintenance Scalability:** By using **OpenTelemetry**, the system is "Cloud-Agnostic" and ready for enterprise monitoring tools like Prometheus, Elastic, or New Relic without changing a single line of business logic.
 
 
-### 🛡️ Financial Compliance & Immutable Audit Trails 
-- **Zero-Touch Accountability:** Implements an automated auditing engine using EF Core Change Tracking. Every database modification is intercepted and recorded without polluting the business logic handlers, ensuring **100% Audit Coverage**.
-- **Correlated Identity Logging:** Seamlessly links every record change to a global User ID extracted from the JWT context, providing a non-repudiable audit trail of "Who, When, and What."
-- **High-Fidelity State Capturing:** Utilizes **PostgreSQL JSONB** storage to serialize the exact state of entities at the moment of change, ensuring complete transparency for forensic accounting and regulatory compliance.
-- **Schema-Level Sovereignty:** Audit logs are physically persisted within each tenant's isolated schema, ensuring that audit trails remain private and compliant with strict **GDPR and SOC2** data residency requirements.
-
----
-
-## 🕹️ End-to-End Scenario: The Life of a Transaction
-
-To see the system's robustness, consider this flow:
-
-1. **Request:** A Tenant initiates a transfer via the Versioned API.
-2. **Concurrency:** A **Redis Lock** is acquired to ensure serialized access to specific accounts.
-3. **Validation:** The **MediatR Pipeline** triggers **FluentValidation** followed by Domain-level invariant checks.
-4. **Persistence:** The Ledger record and an **Outbox Message** are saved in a single **ACID Transaction**.
-5. **Auditing:** Simultaneously, the system automatically captures the "Before/After" state and the responsible User ID in an **Immutable Audit Log**.
-6. **Reliability:** The **Background Worker** ensures the event is published even if the primary API process crashes.
-7. **Insight:** The **Reporting Engine** extracts data from the isolated schema to produce a professional PDF report.
-8. **Observability:** Every step above is captured as a correlated **Trace** in Jaeger, providing 100% transparency into the transaction's performance.
-
-
----
-
-
-## 🗺️ Project Roadmap
-
-- [x] **Phase 1-4:** Core Engine, Multi-tenant Isolation, Outbox Pattern, Redis Locking, and PDF Reporting.
-- [x] **Phase 5: Automated Quality Assurance**
-    - [x] Unit Testing (xUnit), Architecture Testing (NetArchTest), and Integration Testing (**TestContainers**).
-- [x] **Phase 6: Advanced Identity & RBAC**
-    - [x] Multi-tenant JWT, Policy-based Authorization, and **BCrypt** security.
-- [x] **Phase 7: Cloud-Native Observability **
-    - [x] **OpenTelemetry** integration with **Jaeger** for distributed tracing and performance monitoring.
-- [x] **Phase 8: Financial Compliance & Auditing **
-    - [x] **Automated Audit Trail:** System-wide tracking of "Who, When, and What" for every database change.
-    - [x] **User Attribution:** Seamless integration between JWT Identity and persistence layer via `ICurrentUserProvider`.
-    - [x] **Data Integrity:** Physical schema-level auditing to satisfy European financial regulations.
-- [x] **Phase 9: Enterprise Deployment & CI/CD **
-    - [x] Automated GitHub Actions pipeline for Cloud-based Build & Test
-- [x] **Phase 10: Production Hardening & Orchestration **
-    - [x] **Docker Multi-stage Build:** Optimized Alpine-based images for high-speed deployment.
-    - [x] **Kubernetes Ready:** Fully defined K8s Manifests (Deployments, Services, ConfigMaps).
-    - [x] **High Availability:** Pre-configured for horizontal scaling and self-healing.
----
-
-## 🚀 Core Features & Technical Excellence
 
 ### 🛡️ Financial Compliance & Immutable Audit Trails 
 FinLedger ensures 100% accountability through an automated auditing engine:
@@ -183,26 +149,99 @@ The system is ready for **Enterprise Clusters** (AKS, EKS, GKE) with production-
 - **Secret Management:** Decoupled sensitive data (JWT keys, Connection Strings) using K8s **Secrets** and **ConfigMaps**.
 
 
+---
+
+### 🕹️ End-to-End Scenario: The Life of a Transaction
+
+To illustrate how these layers work together in harmony to ensure financial integrity and cloud-native reliability, here is the journey of a single audited transaction:
+
+| Step | Layer | Action |
+| :--- | :--- | :--- |
+| **1** | **DevOps (CI)** | **GitHub Actions** automatically triggers a build and executes the triple-layer test suite (Unit, Architecture, and Integration) to verify code integrity before any deployment. |
+| **2** | **Orchestration** | **Kubernetes** hosts the engine in a self-healing, 3-replica cluster, managing resource limits and health probes to ensure high availability. |
+| **3** | **API Gateway** | A Tenant initiates a request via the Versioned API, where the system dynamically resolves the **Tenant Identity** from the request context. |
+| **4** | **Resilience** | A **Redis RedLock** is acquired to ensure serialized, thread-safe access to the financial accounts, preventing race conditions in a distributed environment. |
+| **5** | **Validation** | The **MediatR Pipeline** executes **FluentValidation** followed by rich Domain-level invariant checks to ensure the double-entry balance is never violated. |
+| **6** | **Persistence** | The Ledger record and an **Outbox Message** are saved in a single **ACID Transaction**, guaranteeing that business data and integration events remain consistent. |
+| **7** | **Compliance** | Simultaneously, the system automatically captures the "Before/After" state and the User ID in an **Immutable Audit Log** for forensic accountability. |
+| **8** | **Reliability** | The **Background Worker** processes the Outbox messages, ensuring that integration events are delivered to the message broker even if the primary process fails. |
+| **9** | **Insight** | The **Reporting Engine (Dapper)** extracts data from the isolated schema to produce sub-second JSON responses or professional **QuestPDF** documents. |
+| **10** | **Observability** | Every single step above is correlated as a unified **Trace in Jaeger**, providing 100% transparency into the performance and behavior of the transaction. |
+
+---
+
+
+عبدالله عزیز، اضافه کردن فرانت‌اِند (React + TypeScript) دقیقاً همان چیزی است که پروژه‌ی تو را از یک «کدِ باکیفیت» به یک **«محصولِ تمام‌عیار»** تبدیل می‌کند. 🥂
+
+به عنوان یک **Principal Architect**، به تو می‌گویم که چرا این کار فوق‌العاده است:
+۱. **تجسمِ پیچیدگی‌ها:** مفاهیمی مثل "تغییر مستأجر" (Tenant Switching) یا "لاگ‌های حسابرسی" در Swagger کمی خشک هستند، اما در فرانت‌اِند وقتی با یک کلیک بین دو شرکت جابجا می‌شوی، قدرت معماری تو به صورت بصری به ریکروتر سیلی می‌زند!
+۲. **اثبات یکپارچگی:** این کار ثابت می‌کند که API تو واقعاً قابل مصرف (Consumable) است و استانداردهایی مثل CORS و JWT را به درستی رعایت کرده است.
+
+بیایید این را به عنوان **فاز ۱۱** به نقشه راه (Roadmap) اضافه کنیم، اما با لحنی که نشان دهد فرانت‌اِند در خدمتِ نمایشِ قدرتِ بک‌اِند است.
+
+---
+
+## 🗺️ Project Evolution & Completed Milestones
+
+FinLedger has evolved through a structured engineering roadmap, moving from a core financial engine to a fully orchestrated cloud-native ecosystem.
+
+- [x] **Phase 1-4: Core Financial Engine**
+    - Multi-tenant physical isolation, Double-entry integrity, and Outbox reliability.
+- [x] **Phase 5: Automated Quality Assurance**
+    - Triple-layer testing suite using **TestContainers** for real-world environment parity.
+- [x] **Phase 6: Advanced Identity & RBAC**
+    - Multi-tenant JWT security with custom claims and policy-based authorization.
+- [x] **Phase 7: Cloud-Native Observability**
+    - Full request tracing with **OpenTelemetry** and **Jaeger** visualization.
+- [x] **Phase 8: Financial Compliance & Auditing**
+    - Zero-touch automated audit logs for 100% database change accountability.
+- [x] **Phase 9: Continuous Integration (CI)**
+    - Automated **GitHub Actions** pipeline for cloud-based verification.
+- [x] **Phase 10: Production Hardening & Orchestration**
+    - Optimized Docker builds and **Kubernetes** manifests for high-availability.
+- [ ] **Phase 11: The Interactive Showcase (Current Goal 🎨)**
+    - Developing a **React + TypeScript** dashboard to visually demonstrate multi-tenancy, real-time auditing, and financial reporting.
+
+---
+
+### 🚀 The Road Ahead (Future Enhancements)
+- **Phase 12:** Integration of **Event Sourcing** for immutable ledger history.
+- **Phase 13:** AI-driven anomaly detection using the recorded Audit Log patterns.
+
+
+
 
 ---
 
 ## 🕹️ Getting Started: The Developer Journey
 
-Follow these steps to explore the system's multi-tenant security, financial integrity, and observability.
+Follow these steps to explore the system's full multi-tenant security, financial integrity, and cloud-native orchestration.
 
 ### 🛠️ 1. Prerequisites & Infrastructure
-Ensure you have **Docker Desktop** and **.NET 9 SDK** installed.
+Ensure you have **Docker Desktop** (with Kubernetes enabled), **kubectl**, and **.NET 9 SDK** installed.
 ```powershell
 # Start PostgreSQL, Redis, RabbitMQ, and Jaeger (Monitoring)
 docker-compose up -d
 ```
 
 ### 🚀 2. Run the Application
-Execute the Host API project in Development mode to enable Swagger and Tracing:
+You can run the engine either as a standalone process or within the Kubernetes cluster.
+
+**Option A: Local Development Mode**
 ```powershell
 $env:ASPNETCORE_ENVIRONMENT="Development"
 dotnet run --project src/Modules/Ledger/FinLedger.Modules.Ledger.Api/FinLedger.Modules.Ledger.Api.csproj
 ```
+
+**Option B: Kubernetes Verification (Phase 10)**
+```powershell
+# Apply the production-grade manifests
+kubectl apply -f deploy/k8s/
+
+# Verify the 3-replica High Availability state
+kubectl get pods
+```
+
 > **Endpoints:**
 > - **Swagger UI:** [http://localhost:5000/swagger](http://localhost:5000/swagger)
 > - **Jaeger Tracing:** [http://localhost:16686](http://localhost:16686)
@@ -211,58 +250,52 @@ dotnet run --project src/Modules/Ledger/FinLedger.Modules.Ledger.Api/FinLedger.M
 
 ### 🛡️ 3. The End-to-End Testing Flow (Step-by-Step)
 
-To verify the full lifecycle of a secure, audited transaction, follow this sequence:
+To verify the full lifecycle of a secure, audited transaction, follow this sequence in Swagger:
 
 | Step | Action | Endpoint | Key Note |
 | :--- | :--- | :--- | :--- |
-| **1** | **Register** | `POST /identity/Users/register` | Creates your global identity. |
-| **2** | **Assign Role**| `POST /identity/Users/assign-role` | Connects you to a `tenant_id` (e.g., `berlin_hq`) as **Admin (1)**. |
-| **3** | **Login** | `POST /identity/Users/login` | Obtain a **JWT Token** containing your tenant-specific roles. |
-| **4** | **Authorize** | Click **Authorize** button | Paste the token (Swagger handles the Bearer prefix). |
-| **5** | **Execute** | `POST /ledger/Accounts` | Set Header `X-Tenant-Id: berlin_hq`. Schema is auto-provisioned on first call. |
-| **6** | **Audit Check**| `GET /ledger/Reports/audit-logs` | Observe how the system automatically tracked your "Who, When, and What". |
+| **1** | **Register** | `POST /identity/Users/register` | Creates your global platform identity. |
+| **2** | **Assign Role**| `POST /identity/Users/assign-role` | Connects you to a `tenant_id` (e.g., `v8_test`) as **Admin (1)**. |
+| **3** | **Login** | `POST /identity/Users/login` | Obtain a **JWT Token** containing tenant-specific claims. |
+| **4** | **Authorize** | Click **Authorize** button | Paste the token (System handles the Bearer prefix). |
+| **5** | **Execute** | `POST /ledger/Accounts` | Set Header `X-Tenant-Id: v8_test`. Schema is auto-provisioned on call. |
+| **6** | **Audit Check**| `GET /ledger/Reports/audit-logs` | See how the system automatically tracked your "Who, When, and What". |
 
 ---
 
-### 🕵️ 4. Observability in Action
-After performing the steps above, visit the **Jaeger Dashboard**. You will see correlated traces showing the MediatR pipeline execution and the exact SQL queries executed inside the tenant's private schema.
+### 🕵️ 4. Observability & Infrastructure
+After performing the steps above, visit the **Jaeger Dashboard**. You can observe the correlated traces showing exactly how the MediatR pipeline interacted with the PostgreSQL specific tenant schema.
 
 ---
 
 ### 🧪 5. Running the Test Suite
+FinLedger is guarded by a triple-layer testing strategy to ensure zero regression:
 ```powershell
 # Runs Unit, Architecture, and Integration Tests (TestContainers)
 dotnet test
 ```
-- **Integration Tests:** Use ephemeral Docker containers to verify database logic in a clean environment.
-- **Architecture Tests:** Enforce Clean Architecture (Onion) boundaries and naming conventions automatically.
+- **Integration Tests:** Leverage **TestContainers** to spin up ephemeral PostgreSQL 16 instances, ensuring real-world database logic verification.
+- **Architecture Tests:** Automatically enforce Clean Architecture boundaries and naming conventions.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack (The Principal Suite)
 
-- **Framework:** .NET 9 (C# 13), MediatR, FluentValidation, Serilog.
-- **Security:** **JWT Bearer Auth**, **Multi-tenant RBAC**, **BCrypt.Net**.
-- **Observability:** **OpenTelemetry (OTEL)**, **Jaeger Dashboard**.
+- **Framework:** .NET 9 (C# 13), MediatR (CQRS), FluentValidation.
+- **Security & Identity:** **JWT Bearer Auth**, **Multi-tenant RBAC**, **BCrypt.Net**.
+- **Orchestration & DevOps:** **Kubernetes (K8s)**, **GitHub Actions (CI)**, Docker Multi-stage Builds.
+- **Observability:** **OpenTelemetry (OTEL)**, **Jaeger**, Serilog (JSON).
+- **Persistence:** PostgreSQL 16 (**Schema-per-Tenant**), EF Core 9, **Dapper** (High-perf Reads).
+- **Resilience:** Redis (**RedLock Distributed Locking algorithm**), Outbox Pattern.
 - **Testing:** xUnit, FluentAssertions, NetArchTest, NSubstitute, **TestContainers**.
-- **Data:** PostgreSQL 16 (Schema-per-Tenant), EF Core 9, Dapper, Redis (RedLock).
-- **Infrastructure:** Docker Compose, QuestPDF, Health Checks.
-- **CI/CD & DevOps:** **GitHub Actions**, Docker Compose, **TestContainers**.
-- **Orchestration:** **Kubernetes (K8s)**, Docker Compose.
----
 
 ---
 
-**Status:** **Production-Grade, High-Availability Ledger Engine Fully Operational.**
+**Status:** 🏆 **Production-Grade, High-Availability Ledger Engine Fully Operational.**
 
-> **Note to Reviewers:** This project has successfully passed the full lifecycle from Domain-Driven Design to Kubernetes Orchestration. The current cluster configuration supports self-healing, horizontal scaling, and zero-downtime deployments.
+> **Note to Reviewers:** This project has successfully passed the full lifecycle from Domain-Driven Design to Kubernetes Orchestration. The current configuration supports self-healing, horizontal scaling, and zero-downtime deployments.
 
 ![Kubernetes Running Pods](./docs/screenshots/k8s-running-pods.png)
-
 ```
 
 ---
-
-
-
-
