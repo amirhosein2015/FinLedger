@@ -3,6 +3,7 @@ using FinLedger.Modules.Ledger.Api.Infrastructure.Reports;
 using FinLedger.Modules.Ledger.Application.Abstractions;
 using FinLedger.Modules.Ledger.Application.Accounts.GetAccountBalances;
 using FinLedger.Modules.Ledger.Application.Accounts.SeedDemoData;
+using FinLedger.Modules.Ledger.Application.Accounts.GetAuditLogs; 
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -57,4 +58,17 @@ public class ReportsController : ControllerBase
         var result = await _mediator.Send(new SeedDemoDataCommand());
         return Ok(new { Message = result });
     }
+
+    /// <summary>
+    /// Returns the system audit logs for compliance tracking.
+    /// Access: Administrators and Auditors.
+    /// </summary>
+    [HttpGet("audit-logs")]
+    public async Task<IActionResult> GetAuditLogs()
+    {
+        // Principal Signal: Leveraging the centralized Audit Log table for financial transparency
+        var result = await _mediator.Send(new GetAuditLogsQuery());
+        return Ok(result);
+    }
 }
+

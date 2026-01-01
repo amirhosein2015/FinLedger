@@ -27,7 +27,6 @@ using QuestPDF.Infrastructure;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-
 // Setting the AppContext switch BEFORE any other executable code
 // to ensure PostgreSQL handles DateTime UTC conversions correctly.
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -58,9 +57,9 @@ try
             tracing
                 .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("FinLedger.API"))
                 .AddAspNetCoreInstrumentation()
-                .AddEntityFrameworkCoreInstrumentation() // Trace Database Queries
-                .AddRedisInstrumentation() // Trace Redis Operations
-                .AddSource("MediatR") // Custom source for pipeline tracing
+                .AddEntityFrameworkCoreInstrumentation() 
+                .AddRedisInstrumentation() 
+                .AddSource("MediatR") 
                 .AddOtlpExporter(opt => 
                 {
                     opt.Endpoint = new Uri("http://localhost:4317");
@@ -147,17 +146,25 @@ try
         typeof(FinLedger.Modules.Identity.Application.Abstractions.IIdentityDbContext).Assembly 
     });
 
+    // Suppressing the strict EF Core 9 migration warning for Multi-tenant environments
     builder.Services.AddDbContext<LedgerDbContext>((sp, opt) =>
     {
         opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
         opt.ReplaceService<IModelCacheKeyFactory, TenantModelCacheKeyFactory>();
+        
+       
+        opt.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
     });
+
     builder.Services.AddScoped<ILedgerDbContext>(p => p.GetRequiredService<LedgerDbContext>());
 
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ITenantProvider, HttpHeaderTenantProvider>();
     builder.Services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect("localhost:16379")); 
     builder.Services.AddSingleton<IDistributedLock, RedisDistributedLock>();
+
+    // Registering CurrentUserProvider to track identity in audit logs
+    builder.Services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
 
     builder.Services.AddHealthChecks()
         .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!)

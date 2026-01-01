@@ -105,6 +105,13 @@ The following trace demonstrates the full request lifecycle. It captures the cor
 - **Tenant Isolation Proof:** The trace confirms that the SQL instrumentation correctly executes within the dynamically resolved tenant schema (e.g., `berlin_hq`), validating physical data isolation.
 - **Maintenance Scalability:** By using **OpenTelemetry**, the system is "Cloud-Agnostic" and ready for enterprise monitoring tools like Prometheus, Elastic, or New Relic without changing a single line of business logic.
 
+
+### 🛡️ Financial Compliance & Immutable Audit Trails 
+- **Zero-Touch Accountability:** Implements an automated auditing engine using EF Core Change Tracking. Every database modification is intercepted and recorded without polluting the business logic handlers, ensuring **100% Audit Coverage**.
+- **Correlated Identity Logging:** Seamlessly links every record change to a global User ID extracted from the JWT context, providing a non-repudiable audit trail of "Who, When, and What."
+- **High-Fidelity State Capturing:** Utilizes **PostgreSQL JSONB** storage to serialize the exact state of entities at the moment of change, ensuring complete transparency for forensic accounting and regulatory compliance.
+- **Schema-Level Sovereignty:** Audit logs are physically persisted within each tenant's isolated schema, ensuring that audit trails remain private and compliant with strict **GDPR and SOC2** data residency requirements.
+
 ---
 
 ## 🕹️ End-to-End Scenario: The Life of a Transaction
@@ -115,9 +122,10 @@ To see the system's robustness, consider this flow:
 2. **Concurrency:** A **Redis Lock** is acquired to ensure serialized access to specific accounts.
 3. **Validation:** The **MediatR Pipeline** triggers **FluentValidation** followed by Domain-level invariant checks.
 4. **Persistence:** The Ledger record and an **Outbox Message** are saved in a single **ACID Transaction**.
-5. **Reliability:** The **Background Worker** ensures the event is published even if the primary API process crashes.
-6. **Insight:** The **Reporting Engine** extracts data from the isolated schema to produce a professional PDF report.
-7. **Observability:** Every step above is captured as a correlated **Trace** in Jaeger, providing 100% transparency into the transaction's performance.
+5. **Auditing:** Simultaneously, the system automatically captures the "Before/After" state and the responsible User ID in an **Immutable Audit Log**.
+6. **Reliability:** The **Background Worker** ensures the event is published even if the primary API process crashes.
+7. **Insight:** The **Reporting Engine** extracts data from the isolated schema to produce a professional PDF report.
+8. **Observability:** Every step above is captured as a correlated **Trace** in Jaeger, providing 100% transparency into the transaction's performance.
 
 
 ---
@@ -132,72 +140,95 @@ To see the system's robustness, consider this flow:
     - [x] Multi-tenant JWT, Policy-based Authorization, and **BCrypt** security.
 - [x] **Phase 7: Cloud-Native Observability (Completed 🏆)**
     - [x] **OpenTelemetry** integration with **Jaeger** for distributed tracing and performance monitoring.
-- [ ] **Phase 8: Financial Compliance & Auditing**
-    - Implementation of Immutable Audit Logs (Who/When/What) and Fiscal Year-End closing logic.
-- [ ] **Phase 9: Enterprise Deployment & CI/CD (Final Frontier)**
-    - Automated pipelines with **GitHub Actions**, Docker Registry integration, and Kubernetes (K8s) manifests.
+- [x] **Phase 8: Financial Compliance & Auditing (Completed 🏆)**
+    - [x] **Automated Audit Trail:** System-wide tracking of "Who, When, and What" for every database change.
+    - [x] **User Attribution:** Seamless integration between JWT Identity and persistence layer via `ICurrentUserProvider`.
+    - [x] **Data Integrity:** Physical schema-level auditing to satisfy European financial regulations.
+- [ ] **Phase 9: Enterprise Deployment & CI/CD**
+    - Automated pipelines with GitHub Actions and Docker Registry.
 
 ---
 
+## 🚀 Core Features & Technical Excellence
 
+### 🛡️ Financial Compliance & Immutable Audit Trails (Phase 8)
+FinLedger ensures 100% accountability through an automated auditing engine:
+- **Zero-Touch Auditing:** Leveraging EF Core Change Tracking to intercept and log every database modification (Insert/Update/Delete) without manual intervention in business handlers.
+- **Correlated Identity:** Every audit entry automatically captures the Global User ID from the JWT context via a decoupled `ICurrentUserProvider`.
+- **Forensic Transparency:** Entity states are serialized into high-performance **PostgreSQL JSONB** columns, providing a complete "Before/After" history for regulatory compliance.
+- **Physical Data Isolation:** Audit logs are stored within each tenant's private schema, satisfying strict **GDPR and SOC2** data residency requirements.
+
+---
 
 ## 🕹️ Getting Started: The Developer Journey
 
-Follow these steps to explore the system's full multi-tenant security and financial integrity flow.
+Follow these steps to explore the system's multi-tenant security, financial integrity, and observability.
 
 ### 🛠️ 1. Prerequisites & Infrastructure
 Ensure you have **Docker Desktop** and **.NET 9 SDK** installed.
 ```powershell
-# Start PostgreSQL, Redis, and RabbitMQ
+# Start PostgreSQL, Redis, RabbitMQ, and Jaeger (Monitoring)
 docker-compose up -d
 ```
 
 ### 🚀 2. Run the Application
-Execute the Host API project:
+Execute the Host API project in Development mode to enable Swagger and Tracing:
 ```powershell
+$env:ASPNETCORE_ENVIRONMENT="Development"
 dotnet run --project src/Modules/Ledger/FinLedger.Modules.Ledger.Api/FinLedger.Modules.Ledger.Api.csproj
 ```
-> **Swagger UI:** [http://localhost:5000/swagger](http://localhost:5000/swagger)
+> **Endpoints:**
+> - **Swagger UI:** [http://localhost:5000/swagger](http://localhost:5000/swagger)
+> - **Jaeger Tracing:** [http://localhost:16686](http://localhost:16686)
 
 ---
 
 ### 🛡️ 3. The End-to-End Testing Flow (Step-by-Step)
 
-To verify the **Multi-tenant RBAC** and **Ledger Isolation**, follow this sequence in Swagger:
+To verify the full lifecycle of a secure, audited transaction, follow this sequence:
 
 | Step | Action | Endpoint | Key Note |
 | :--- | :--- | :--- | :--- |
-| **1** | **Register** | `POST /identity/Users/register` | Creates a global user identity. |
-| **2** | **Assign Role** | `POST /identity/Users/assign-role` | Connects user to a `tenant_id` (e.g., `berlin_hq`) with a role (1=Admin). |
-| **3** | **Login** | `POST /identity/Users/login` | Returns a **JWT Token** containing tenant-specific claims. |
-| **4** | **Authorize** | Click **Authorize** button | Paste the token (Swagger automatically adds the 'Bearer' prefix). |
-| **5** | **Ledger Action**| `POST /ledger/Entries` | Set Header `X-Tenant-Id: berlin_hq`. System verifies role inside the token for this specific tenant. |
+| **1** | **Register** | `POST /identity/Users/register` | Creates your global identity. |
+| **2** | **Assign Role**| `POST /identity/Users/assign-role` | Connects you to a `tenant_id` (e.g., `berlin_hq`) as **Admin (1)**. |
+| **3** | **Login** | `POST /identity/Users/login` | Obtain a **JWT Token** containing your tenant-specific roles. |
+| **4** | **Authorize** | Click **Authorize** button | Paste the token (Swagger handles the Bearer prefix). |
+| **5** | **Execute** | `POST /ledger/Accounts` | Set Header `X-Tenant-Id: berlin_hq`. Schema is auto-provisioned on first call. |
+| **6** | **Audit Check**| `GET /ledger/Reports/audit-logs` | Observe how the system automatically tracked your "Who, When, and What". |
 
 ---
 
-### 🧪 4. Running the Test Suite
-FinLedger uses a triple-layer testing strategy. You can run all tests via CLI:
+### 🕵️ 4. Observability in Action
+After performing the steps above, visit the **Jaeger Dashboard**. You will see correlated traces showing the MediatR pipeline execution and the exact SQL queries executed inside the tenant's private schema.
+
+---
+
+### 🧪 5. Running the Test Suite
 ```powershell
 # Runs Unit, Architecture, and Integration Tests (TestContainers)
 dotnet test
 ```
-- **Integration Tests:** Automatically spin up ephemeral Docker containers for a clean-room verification of the database logic.
-- **Architecture Tests:** Enforce Clean Architecture boundaries and naming conventions automatically.
-
+- **Integration Tests:** Use ephemeral Docker containers to verify database logic in a clean environment.
+- **Architecture Tests:** Enforce Clean Architecture (Onion) boundaries and naming conventions automatically.
 
 ---
-
 
 ## 🛠️ Tech Stack
 
 - **Framework:** .NET 9 (C# 13), MediatR, FluentValidation, Serilog.
-- **Security & Identity:** JWT Bearer Authentication, Custom Policy-based RBAC, BCrypt.Net (Password Hashing).
-- **Testing Suite:** xUnit, FluentAssertions, NetArchTest, NSubstitute, **TestContainers (PostgreSQL & Redis)**.
-- **Data Persistence:** PostgreSQL 16 (Schema-per-Tenant), EF Core 9, Dapper (High-perf Read Model), Redis (Distributed Locking).
-- **Infrastructure & Tools:** Docker Compose, QuestPDF (Professional Reporting), ASP.NET Core Health Checks.
+- **Security:** **JWT Bearer Auth**, **Multi-tenant RBAC**, **BCrypt.Net**.
+- **Observability:** **OpenTelemetry (OTEL)**, **Jaeger Dashboard**.
+- **Testing:** xUnit, FluentAssertions, NetArchTest, NSubstitute, **TestContainers**.
+- **Data:** PostgreSQL 16 (Schema-per-Tenant), EF Core 9, Dapper, Redis (RedLock).
+- **Infrastructure:** Docker Compose, QuestPDF, Health Checks.
 
 ---
-**Status:**  *Production-Grade Ledger Engine Operational.*
+
+**Status:** 🏆 *Enterprise-Grade, Secure & Observable Ledger Engine Operational.*
 ```
 
 ---
+
+
+
+
