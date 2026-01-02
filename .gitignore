@@ -425,3 +425,12 @@ deploy/data/
 # Build artifacts
 [Bb]in/
 [Oo]bj/
+
+
+
+# Local secrets
+*.user
+.env
+.env.local
+.env.*.local
+appsettings.Local.json
