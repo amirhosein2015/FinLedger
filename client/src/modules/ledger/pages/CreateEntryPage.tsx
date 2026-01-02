@@ -74,8 +74,8 @@ export const CreateEntryPage: React.FC<Props> = ({ accounts }) => {
       {/* 2. Column Headers for Clarity */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '8px', padding: '0 5px' }}>
         <div style={{ flex: 2, fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>Select Account</div>
-        <div style={{ flex: 1, fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>Debit (Incoming +)</div>
-        <div style={{ flex: 1, fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>Credit (Outgoing -)</div>
+        <div style={{ flex: 1, fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>Debit </div>
+        <div style={{ flex: 1, fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>Credit </div>
       </div>
       
       {/* 3. Transaction Lines */}
