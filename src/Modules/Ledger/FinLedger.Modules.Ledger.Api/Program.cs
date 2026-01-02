@@ -40,7 +40,7 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-    Log.Information("Starting FinLedger Enterprise API...");
+    Log.Information("Starting FinLedger Enterprise API with React Integration...");
     var builder = WebApplication.CreateBuilder(args);
     builder.Host.UseSerilog();
 
@@ -80,6 +80,17 @@ try
     {
         options.AddPolicy("AdminOnly", policy => policy.Requirements.Add(new TenantRoleRequirement("Admin")));
         options.AddPolicy("AccountantAccess", policy => policy.Requirements.Add(new TenantRoleRequirement("Accountant")));
+    });
+
+    // Configuring CORS to allow the React Frontend to communicate with the API
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowReactApp", policy =>
+        {
+            policy.WithOrigins("http://localhost:5174") // Vite Dev Server URL
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
     });
 
     // --- 4. API Configuration ---
@@ -124,18 +135,19 @@ try
         opt.ReplaceService<IModelCacheKeyFactory, TenantModelCacheKeyFactory>();
         opt.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
     });
+
+
+    
     builder.Services.AddScoped<ILedgerDbContext>(p => p.GetRequiredService<LedgerDbContext>());
 
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<ITenantProvider, HttpHeaderTenantProvider>();
     builder.Services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
 
-    // --- 6. Resilience: Dynamic Redis Configuration (FIXED FOR CI) ---
+    // --- 6. Resilience: Dynamic Redis Configuration ---
     var redisUrl = builder.Configuration.GetConnectionString("Redis") ?? "localhost:16379";
-    
-    // Non-blocking connection options for Cloud/CI environments
     var redisOptions = ConfigurationOptions.Parse(redisUrl);
-    redisOptions.AbortOnConnectFail = false; // Essential: Don't crash if Redis is slow to start
+    redisOptions.AbortOnConnectFail = false; 
     redisOptions.ConnectRetry = 5;
     redisOptions.ConnectTimeout = 10000;
 
@@ -152,6 +164,9 @@ try
     // --- 7. Pipeline ---
     app.UseSerilogRequestLogging();
     app.UseExceptionHandler();
+
+    // Enable CORS before Authentication/Authorization
+    app.UseCors("AllowReactApp");
 
     if (app.Environment.IsDevelopment())
     {

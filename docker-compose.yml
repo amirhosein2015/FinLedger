@@ -8,7 +8,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: SecurePassword123!
+      POSTGRES_PASSWORD: FinLedger_Strong_Vault_2026_!!_
       POSTGRES_DB: finledger_core
     ports:
       - "15432:5432" # 

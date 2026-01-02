@@ -9,25 +9,23 @@ namespace FinLedger.Modules.Ledger.Application.Accounts.GetAccountBalances;
 
 public record GetAccountBalancesQuery : IRequest<IReadOnlyCollection<AccountBalanceDto>>;
 
-// Sealed for performance and to satisfy architectural integrity rules
-internal sealed class GetAccountBalancesQueryHandler : IRequestHandler<GetAccountBalancesQuery, IReadOnlyCollection<AccountBalanceDto>>
+internal sealed class GetAccountBalancesQueryHandler(ILedgerDbContext dbContext) 
+    : IRequestHandler<GetAccountBalancesQuery, IReadOnlyCollection<AccountBalanceDto>>
 {
-    private readonly ILedgerDbContext _dbContext;
-    public GetAccountBalancesQueryHandler(ILedgerDbContext dbContext) => _dbContext = dbContext;
-
     public async Task<IReadOnlyCollection<AccountBalanceDto>> Handle(GetAccountBalancesQuery request, CancellationToken cancellationToken)
     {
-        if (_dbContext is not DbContext efContext)
-            throw new InvalidOperationException("Relational database context is required for optimized Dapper reporting.");
+        if (dbContext is not DbContext efContext)
+            throw new InvalidOperationException("Relational database context is required.");
 
         var connection = efContext.Database.GetDbConnection();
         if (connection.State == ConnectionState.Closed) await connection.OpenAsync(cancellationToken);
-        
-        var schema = _dbContext.TenantId;
 
-        // Optimized reporting query with conditional aggregation to minimize DB roundtrips
+        var schema = dbContext.TenantId;
+
+        // Added a."Id" to the SELECT statement to ensure the Frontend can identify accounts
         var sql = $@"
             SELECT 
+                a.""Id"" as Id, 
                 a.""Code"" as AccountCode, 
                 a.""Name"" as AccountName,
                 COALESCE(SUM(CASE WHEN e.""Status"" = 2 THEN l.""Debit"" ELSE 0 END), 0) as TotalDebit,
@@ -35,10 +33,11 @@ internal sealed class GetAccountBalancesQueryHandler : IRequestHandler<GetAccoun
             FROM ""{schema}"".""Accounts"" a
             LEFT JOIN ""{schema}"".""JournalEntryLines"" l ON a.""Id"" = l.""AccountId""
             LEFT JOIN ""{schema}"".""JournalEntries"" e ON l.""JournalEntryId"" = e.""Id""
-            GROUP BY a.""Code"", a.""Name""
+            GROUP BY a.""Id"", a.""Code"", a.""Name""
             ORDER BY a.""Code"";";
 
         var result = await connection.QueryAsync<AccountBalanceDto>(sql);
+
         return result.ToList().AsReadOnly();
     }
 }

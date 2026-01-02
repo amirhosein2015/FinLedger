@@ -434,3 +434,4 @@ deploy/data/
 .env.local
 .env.*.local
 appsettings.Local.json
+appsettings.Development.json
